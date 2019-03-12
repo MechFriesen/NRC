@@ -1,0 +1,7 @@
+How to use the .hex files.
+Step 1. Download the Teensy Loader Application (https://www.pjrc.com/teensy/loader.html)
+Step 2. Open the .hex file that you want to run. (File->Open HEX File)
+Step 3. Plug in main board to computer and follow Teensy Loader prompts to load program
+Step 4. It's logging to an SD card (if there's one in the Teensy). You can also monitor the Teensy with a serial monitor. 
+The program logs data as fast as it can and for 50,000 samples along with microseconds and saves it to a file named H_#.csv where H is hydrophone and # is the number of files created since being turned on.
+Be sure to record meta-data like which moon board (eg. R2A) is being used. This is needed in order to determine the conversion from unitless ADC integers to floats with proper units.
