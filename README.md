@@ -1,4 +1,4 @@
-# WatHydra
+# NRC (*information below may not be applicable and should be modified*)
 Logger program for a Teensy 3.6 gathering data from an off-board ADC and storing to an SD card. Additionaly a GPS and cellular module will be connected so that accurate time stamps can be acquired and data can be uploaded to the cloud.
 
 ## Logging Modes
@@ -25,20 +25,6 @@ https://www.pjrc.com/teensy/tutorial.html
 * GPS for timestamps https://github.com/adafruit/Adafruit_FONA
   * please disable the verbose output (comment out line 31 in /libraries/Adafruit_FONA/includes/FONAConfig.h) prior to compiling binary for deployment
 * Circular array buffer https://github.com/tonton81/Circular_Buffer
-
-### Roadmap
-* Manual Mode
-  - [ ] GPS timestamp
-    - [x] update Teensy clock from cell network
-    - [ ] option to set time using serial monitor
-    - [ ] \(on hold) subsecond using PPS
-  - [ ] ADC communication
-    - [ ] send SPI message
-    - [ ] send the right SPI message
-  - [ ] Hologram communication
-  - [ ] Physical switch between manual and auto logging modes
-  - [ ] Battery voltage measurement
-* detailed power consumption testing with -> https://www.eevblog.com/projects/ucurrent/
 
 ## Sensor Specifications and conversion equations
 ### Temperature, main board (TMP20)
