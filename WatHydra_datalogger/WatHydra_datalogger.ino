@@ -10,12 +10,10 @@
  	This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 */
 
-//#include "libraries/Adafruit_FONA_Wathydra/Adafruit_FONA.h"
-#include "src/FONA/Adafruit_FONA.h"
-#include <circular_buffer.h>
-#include "src/SD/SD.h"
+#include "lib/SDIC_FONA/Adafruit_FONA.h"
+#include "lib/Circular_Buffer/circular_buffer.h"
+#include "lib/SD/SD.h"
 #include <SPI.h>
-#include "src/MAX11254_lib/MAX11254.h"
 #include <Metro.h>
 #include <TimeLib.h>
 #include <Timezone.h>
