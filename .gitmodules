@@ -1,9 +1,9 @@
-[submodule "WatHydra_datalogger/lib/SDIC_FONA"]
+[submodule "NRC_datalogger/lib/SDIC_FONA"]
 	path = NRC_datalogger/lib/SDIC_FONA
 	url = git@github.com:UW-SDIC/Adafruit_FONA.git
-[submodule "WatHydra_datalogger/lib/SD"]
+[submodule "NRC_datalogger/lib/SD"]
 	path = NRC_datalogger/lib/SD
 	url = git@github.com:UW-SDIC/SD.git
-[submodule "WatHydra_datalogger/lib/Circular_Buffer"]
+[submodule "NRC_datalogger/lib/Circular_Buffer"]
 	path = NRC_datalogger/lib/Circular_Buffer
 	url = https://github.com/tonton81/Circular_Buffer.git
