@@ -1,9 +1,9 @@
-[submodule "NRC_datalogger/lib/SDIC_FONA"]
-	path = NRC_datalogger/lib/SDIC_FONA
+[submodule "NRC_datalogger/src/SDIC_FONA"]
+	path = NRC_datalogger/src/SDIC_FONA
 	url = git@github.com:UW-SDIC/Adafruit_FONA.git
-[submodule "NRC_datalogger/lib/SD"]
-	path = NRC_datalogger/lib/SD
+[submodule "NRC_datalogger/src/SD"]
+	path = NRC_datalogger/src/SD
 	url = git@github.com:UW-SDIC/SD.git
-[submodule "NRC_datalogger/lib/Circular_Buffer"]
-	path = NRC_datalogger/lib/Circular_Buffer
+[submodule "NRC_datalogger/src/Circular_Buffer"]
+	path = NRC_datalogger/src/Circular_Buffer
 	url = https://github.com/tonton81/Circular_Buffer.git
