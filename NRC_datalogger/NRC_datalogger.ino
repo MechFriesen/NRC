@@ -18,6 +18,7 @@
 #include <Metro.h>
 #include <TimeLib.h>
 #include <Timezone.h>
+#include <TimerOne.h>
 #include <SoftwareSerial.h>
 #include <Snooze.h>
 
@@ -28,7 +29,7 @@
 // Firmware version string
 static char FirmwareVersion[] = "v2.1.6 - beta - Wake 1:00-7:00 Local Time";
 
-// Load drivers
+// Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
 SnoozeDigital digital;	// Wake from pin interrupt
 SnoozeBlock config_teensy36(alarm, digital); // add alarm driver to main Snoozeblock 
@@ -36,7 +37,7 @@ int sleep_period_hrs = 0;
 int sleep_period_mins = 0; 
 int sleep_period_secs = 0;
 
-// FONA pins
+// FONA configuration
 const int	RX_PIN  = 10;
 const int	TX_PIN  = 9;
 const int	FONA_RST = 25;
@@ -61,7 +62,7 @@ const int Temp = 14;	// requires special analog input settings to not spoil data
 const int A_x = 18;
 const int A_y = 17;
 const int A_z = 16;
-const int BATT_V = 39;			// battery voltage sense
+const int BATT_V = A20;			// battery voltage sense
 const char sensorName[6][10] = {"Passive H", "Active H", "Pressure", "Temp Moon", "Ax Moon", "Ay Moon"};
 
 // Main board pins
@@ -73,16 +74,21 @@ const int SD_CS = BUILTIN_SDCARD; // SD card chip select
 const int MODE = 6;         // mode switch pin
 
 // Timers
-Metro serialPrintTimer = Metro(10000);	//trigger serial print every 10 s
+Metro serialPrintTimer = Metro(5000);	//trigger serial print every 10 s
+
+// Onboard ADC
+ADC *adc = new ADC();
 
 // Global variables
 unsigned long logDuration[6], sec = 0;	// duration of logging in seconds, sec is incremented with received pps
-int numChannels = 1, channel[6], numTestSeqs = 0, sequenceNum = 1, sequence_channel_num, data_temp[3];
-uint8_t receivedPPS = 0;
+uint16_t numTestSeqs = 0, sequenceNum = 1, data_temp;
+uint8_t receivedPPS = 0, A_channel = 2;
+uint16_t outputDivisor = 100, dataPointCount = 0;
 float Batt_volt = 0;
 elapsedMicros ss;
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
-Circular_Buffer<int, 4000, 3> DataBuf;
+bool ledState = false;
+Circular_Buffer<uint16_t, 4000> DataBuf;
 SDClass SD;
 
 // Get user input for channels to log and duration
@@ -128,17 +134,6 @@ void initializeSD() {
 	}
 }
 
-// data producer function
-// TODO: needs modification
-void adcDataGet() {
-	noInterrupts();
-	data_temp[0] = ss;
-	data_temp[1] = sec;
-	// data_temp[2] = moon_adc.readADC();
-	DataBuf.write(data_temp, 3);
-	interrupts();
-}
-
 // For accurate voltage measurements the battery should be in a quasi-OC state (low current draw)
 float readBattVolt() {
 	float avg = 0, voltage;
@@ -153,53 +148,73 @@ float readBattVolt() {
 
 // Core logging loop
 void loggingFun(File *dataFile) {
-	int data[3];
+	uint16_t data;
 	bool stop_logging = false;
 	uint32_t logStartTime;
+	uint16_t desired_sample_rate = 1000;	// samples/second
+	float sample_rate = 1000000.0/(float)(1000000/desired_sample_rate);
+	
+	pinMode(LED_BUILTIN, OUTPUT);
+
+	// setup ADC (probably going to be moved to separate function)
+	adc->setReference(ADC_REFERENCE::REF_3V3, ADC_0);
+	adc->setAveraging(1); // set number of averages
+	adc->setResolution(12); // set bits of resolution
+	
+	// apparently these are necessary 
+	adc->enableCompare(1.0/3.3*adc->getMaxValue(ADC_0), 0, ADC_0); // measurement will be ready if value < 1.0V
+    adc->enableCompareRange(1.0*adc->getMaxValue(ADC_0)/3.3, 2.0*adc->getMaxValue(ADC_0)/3.3, 0, 1, ADC_0); // ready if value lies out of [1.0,2.0] V
+	adc->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED); // change the conversion speed
+	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED); // change the sampling speed
+	adc->enableInterrupts(ADC_0);
+	
+	Timer1.initialize(1000000/desired_sample_rate);	// microseconds
+	Timer1.attachInterrupt(adc_meas_start);
+
+	//NVIC_SET_PRIORITY(IRQ_ADC0, 0); // 0 = highest priority
+    //NVIC_ENABLE_IRQ(IRQ_ADC0);
 
 	serialPrintTimer.reset();
 	logStartTime = now();
-	// attachInterrupt(digitalPinToInterrupt(RDYB), adcDataGet, FALLING);
-	NVIC_SET_PRIORITY( IRQ_PORTD, 64);	// set interrupt priority lower than PPS but still high
-  
+	
 	// logging loop
 	while ( !stop_logging ) {
     	while(!DataBuf.available()) {}  // wait for buffer to have a value
-    	DataBuf.read(data, 3);
-    	dataFile->print((uint32_t) data[0]);    // save microseconds (ensure that it's not type cast to int)
-    	dataFile->print(',');
-    	dataFile->print(data[1]);    // save seconds
-    	dataFile->print(',');
-    	dataFile->println(data[2]);  // save adc value
+    	data = DataBuf.read();
+    	dataFile->print(data & 0x1FFF);    // save seconds
+    	if (data & 0x8000)
+    		dataFile->println();
+    	else
+    		dataFile->print(',');
 
     	// Serial output every 10 seconds for monitoring
     	if (serialPrintTimer.check()) {
-			int* sample = DataBuf.back();
-
-			Serial.printf(", %8i", now()-logStartTime);  // seconds since start of file
-			Serial.printf(", %9i", sample[2]);           // ADC value       
-			Serial.printf(", %11i\n\r", receivedPPS);     // number of PPS pulses received
+			serialPrintTimer.reset();
+			Serial.printf("%8i,", now()-logStartTime);  // seconds since start of file
+			switch((data & 0xE000))  {
+				case (0x2000) : Serial.print("\tA_z,");
+									break;
+				case (0x4000) : Serial.print("\tA_y,");
+									break;
+				case (0x8000) : Serial.print("\tA_x,");
+									break;
+			}
+			Serial.printf("\t%04i\n", (data & 0x1FFF));
 
 			// Do some status checks
 			if ((DataBuf.capacity() - DataBuf.size()) < 100) {
-				// detachInterrupt(RDYB);   // stop retreiving new values from the adc
 				Serial.printf("*BUFFER NEAR CAPACITY*\n\r");
-				// attachInterrupt(digitalPinToInterrupt(RDYB), adcDataGet, FALLING);
 			}
 
-			if ((now() - logStartTime) >= logDuration[sequence_channel_num]) {
-				// detachInterrupt(RDYB);   // stop retreiving new values from the adc
+			if ((now() - logStartTime) >= 30) {
 				stop_logging = true;
 			}
-	  
-			receivedPPS = 0;    // reset PPS count
-			serialPrintTimer.reset();
 		}
 	}
 }
 
 // Checks if the logger should sleep and if so it goes to sleep
-void sleepCheck () {
+void sleepCheck () {// 
   int who; // For snooze library
   
   // Check mode switch pin state
@@ -347,31 +362,39 @@ void startFONA() {
 	} else {
 		Serial.print(fona.enableNetworkTimeSync(true));
 		fona.getTime(timeBuf, 25);
-		Serial.println(timeBuf);
 		parseTime(timeBuf);
 	}
+	
 }
 
 // convert user time input or network time into Teensy time struct
 void parseTime(char *TimeStr) {
 	char * tok;
 	uint8_t field = 0;	// which tm field we're on
-	do {
-		tok = strtok(TimeStr, " /,:+-");
+	tok = strtok(TimeStr, " /,:+-");
+	while (tok != NULL)  {
 		switch(field) {
 			case 0 : tm.Year = atoi(tok);
+						break;
 			case 1 : tm.Month = atoi(tok);
+						break;
 			case 2 : tm.Day = atoi(tok);
+						break;
 			case 3 : tm.Hour = atoi(tok);
+						break;
 			case 4 : tm.Minute = atoi(tok);
+						break;
 			case 5 : tm.Second = atoi(tok);
+						break;
 		}
 		field++;
-	} while (tok != NULL);
+		tok = strtok(NULL, " /,:+-");
+	}
 	
 	setTime(tm.Hour, tm.Minute, tm.Second, tm.Day, tm.Month, tm.Year);
 	Teensy3Clock.set(makeTime(tm));
 	ss = 0;
+// 	digitalClockDisplay();
 }
 
 void digitalClockDisplay() {
@@ -382,7 +405,7 @@ void setup() {
 	char c;
 	bool digitalWake = false;
 
-	Serial.begin(115200);
+	Serial.begin(128000);
 
 	// configure pins
 	pinMode (CS, OUTPUT);
@@ -394,9 +417,9 @@ void setup() {
 	digitalWrite (NOT_C_ON, HIGH);	// FONA off
 
 	delay(500);   // wait for serial
-	Serial.printf("Single Channel Logger - %s\r\n\n", FirmwareVersion);
+	Serial.printf("NRC Logger - %s\r\n\n", FirmwareVersion);
 
-	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
+	/*digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 	
 	Serial.printf("Use FONA? (y/n)\n\r");
@@ -407,7 +430,7 @@ void setup() {
 		Serial.println("Starting FONA chip...");
 	} else {
 		getUserTime();
-	}
+	}*/
 	
 	wakeUp();	// Power on external modules
 }
@@ -423,40 +446,34 @@ void loop() {
 	initializeSD();
 
 	// get user input for session parameters
-	if (!sessionStarted) sessionSetup();
+	//if (!sessionStarted) sessionSetup();
 
 	// Display test parameters
 	Serial.println("\nStarting Session");
 	Serial.printf("Sequence %i of %i\n\r", sequenceNum, numTestSeqs);
 
-	for ( sequence_channel_num = 0; sequence_channel_num < numChannels; sequence_channel_num++) {
-		// Open file
+	// Open file
+	sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
+	File dataFile;	// create file
+	while (!(dataFile = SD.open(filename, FILE_WRITE))) {	// try to open file with write permission
+		Serial.println("There was a problem with the SD card.");  
 		sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
-		File dataFile;	// create file
-		while (!(dataFile = SD.open(filename, FILE_WRITE))) {	// try to open file with write permission
-			//Serial.println("There was a problem with the SD card.");  
-			sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
-		}
-		Serial.printf("File: %s\n\r", filename);
-		Serial.printf("Channel: %i\n\r", channel[sequence_channel_num]);
-		Serial.printf("Duration: %i minutes\n\n\r", logDuration[sequence_channel_num]/60);
-
-		// set channel and sample rate
-		// moon_adc.select_channel(channel[sequence_channel_num]);
-		// moon_adc.set_sample_rate(11);
-
-		// print headers
-		Serial.printf("Status, Time (s), %s [LSB], PPS received\n\r", sensorName[channel[sequence_channel_num]]);
-		dataFile.printf("Microseconds, Seconds, %s [LSB]\n\r", sensorName[channel[sequence_channel_num]]);
-
-		// start logging
-		loggingFun(&dataFile);
-
-		// close down logging
-		dataFile.close();   // close file
-		DataBuf.clear();    // clear the data buffer for the next file
-		Serial.printf("Finished logging to %s\n\n\r", filename);
 	}
+	Serial.printf("File: %s\n\r", filename);
+	//Serial.printf("Channel: %i\n\r", channel[sequence_channel_num]);
+	//Serial.printf("Duration: %i minutes\n\n\r", logDuration[sequence_channel_num]/60);
+
+	// print headers (TODO: Update for NRC project)
+	Serial.printf("Status, Time (s), %s [LSB], PPS received\n\r", "Acceleration");
+	dataFile.printf("Microseconds, Seconds, %s [LSB]\n\r", "Acceleration");
+
+	// start logging
+	loggingFun(&dataFile);
+
+	// close down logging
+	dataFile.close();   // close file
+	DataBuf.clear();    // clear the data buffer for the next file
+	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
 	sequenceNum++;          // increment test number for multi-file sessions
@@ -464,4 +481,25 @@ void loop() {
 	// Go to sleep now (maybe, if the time is right)
 	sleepCheck();
 	digitalClockDisplay();
+}
+
+// data producer function
+// TODO: needs modification
+void adc0_isr() {
+	noInterrupts();
+	//ledState = !ledState;
+	//digitalWriteFast(LED_BUILTIN, ledState);
+	data_temp = (uint16_t)adc->adc0->readSingle() + (0x2000 << A_channel);	// most significant 3 bytes represent the channel
+	if (A_channel == 0) {
+		A_channel = 2;
+		DataBuf.write(
+	} else {
+		A_channel--;
+	}
+	DataBuf.write(data_temp);
+	interrupts();
+}
+
+void adc_meas_start(void) {
+	adc->adc0->startSingleRead((A_z + A_channel));
 }
