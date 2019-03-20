@@ -19,6 +19,7 @@
 #include <TimeLib.h>
 #include <Timezone.h>
 #include <TimerOne.h>
+#include <IntervalTimer.h>
 #include <SoftwareSerial.h>
 #include <Snooze.h>
 
@@ -75,20 +76,22 @@ const int MODE = 6;         // mode switch pin
 
 // Timers
 Metro serialPrintTimer = Metro(5000);	//trigger serial print every 10 s
+IntervalTimer adcTrigger;
 
 // Onboard ADC
 ADC *adc = new ADC();
+ADC::Sync_result ADC_vals;
 
 // Global variables
+const uint16_t arraySize = 256;
 unsigned long logDuration[6], sec = 0;	// duration of logging in seconds, sec is incremented with received pps
-uint16_t numTestSeqs = 0, sequenceNum = 1, data_temp;
-uint8_t receivedPPS = 0, A_channel = 2;
-uint16_t outputDivisor = 100, dataPointCount = 0;
+uint16_t numTestSeqs = 0, sequenceNum = 1;
+uint16_t outputDivisor = 100, dataCount = 0, xData[arraySize], zData[arraySize];
+uint32_t time[arraySize];
 float Batt_volt = 0;
 elapsedMicros ss;
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
 bool ledState = false;
-Circular_Buffer<uint16_t, 4000> DataBuf;
 SDClass SD;
 
 // Get user input for channels to log and duration
@@ -151,8 +154,8 @@ void loggingFun(File *dataFile) {
 	uint16_t data;
 	bool stop_logging = false;
 	uint32_t logStartTime;
-	uint16_t desired_sample_rate = 1000;	// samples/second
-	float sample_rate = 1000000.0/(float)(1000000/desired_sample_rate);
+	uint16_t sample_rate = 50;	// samples/second
+// 	float sample_rate = 1000000.0/(float)(1000000/sample_rate);
 	
 	pinMode(LED_BUILTIN, OUTPUT);
 
@@ -166,50 +169,58 @@ void loggingFun(File *dataFile) {
     adc->enableCompareRange(1.0*adc->getMaxValue(ADC_0)/3.3, 2.0*adc->getMaxValue(ADC_0)/3.3, 0, 1, ADC_0); // ready if value lies out of [1.0,2.0] V
 	adc->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED); // change the conversion speed
 	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED); // change the sampling speed
-	adc->enableInterrupts(ADC_0);
+	adc->setAveraging(1, ADC_1); // set number of averages
+    adc->setResolution(8, ADC_1); // set bits of resolution
+    adc->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED, ADC_1); // change the conversion speed
+    adc->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED, ADC_1); // change the sampling speed
+// 	adc->enableInterrupts(ADC_0);
 	
-	Timer1.initialize(1000000/desired_sample_rate);	// microseconds
-	Timer1.attachInterrupt(adc_meas_start);
+	Serial.printf("Timer period [us]: %i\n", 1000000/sample_rate);
+	//Timer1.initialize(1000000/sample_rate);	// microseconds
+	//Timer1.attachInterrupt(adc_meas_start);
+	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
 
 	//NVIC_SET_PRIORITY(IRQ_ADC0, 0); // 0 = highest priority
     //NVIC_ENABLE_IRQ(IRQ_ADC0);
 
 	serialPrintTimer.reset();
 	logStartTime = now();
-	
+	elapsedMicros time_us = 0;
+	Serial.print("Start synchronized sampling");
+	Serial.println(adc->startSynchronizedContinuous(A_x, A_z));
+
 	// logging loop
 	while ( !stop_logging ) {
-    	while(!DataBuf.available()) {}  // wait for buffer to have a value
-    	data = DataBuf.read();
-    	dataFile->print(data & 0x1FFF);    // save seconds
-    	if (data & 0x8000)
-    		dataFile->println();
-    	else
-    		dataFile->print(',');
+// 		if(adc->isComplete()) {
 
+// 		}
     	// Serial output every 10 seconds for monitoring
-    	if (serialPrintTimer.check()) {
-			serialPrintTimer.reset();
-			Serial.printf("%8i,", now()-logStartTime);  // seconds since start of file
-			switch((data & 0xE000))  {
-				case (0x2000) : Serial.print("\tA_z,");
-									break;
-				case (0x4000) : Serial.print("\tA_y,");
-									break;
-				case (0x8000) : Serial.print("\tA_x,");
-									break;
-			}
-			Serial.printf("\t%04i\n", (data & 0x1FFF));
+//     	if (serialPrintTimer.check()) {
+// 			serialPrintTimer.reset();
+// 			Serial.printf("%8i,", now()-logStartTime);  // seconds since start of file
+// 			switch((data & 0xE000))  {
+// 				case (0x2000) : Serial.print("\tA_z,");
+// 									break;
+// 				case (0x4000) : Serial.print("\tA_y,");
+// 									break;
+// 				case (0x8000) : Serial.print("\tA_x,");
+// 									break;
+// 			}
+// 			Serial.printf("\t%04i\n", (data & 0x1FFF));
 
-			// Do some status checks
-			if ((DataBuf.capacity() - DataBuf.size()) < 100) {
-				Serial.printf("*BUFFER NEAR CAPACITY*\n\r");
-			}
-
-			if ((now() - logStartTime) >= 30) {
+			if ((now() - logStartTime) >= 10) {
 				stop_logging = true;
 			}
-		}
+			else if (dataCount > arraySize) {
+				stop_logging = true;
+				adcTrigger.end();
+				//Timer1.stop();
+			}
+// 		}
+	}
+	Serial.println("ii\ttime [us]\tA_x\tA_y");
+	for (int ii = 0; ii < arraySize; ii++) {
+		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time[ii], xData[ii], zData[ii]);
 	}
 }
 
@@ -472,7 +483,7 @@ void loop() {
 
 	// close down logging
 	dataFile.close();   // close file
-	DataBuf.clear();    // clear the data buffer for the next file
+// 	DataBuf.clear();    // clear the data buffer for the next file
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
@@ -485,21 +496,23 @@ void loop() {
 
 // data producer function
 // TODO: needs modification
-void adc0_isr() {
+/*void adc0_isr() {
 	noInterrupts();
-	//ledState = !ledState;
-	//digitalWriteFast(LED_BUILTIN, ledState);
-	data_temp = (uint16_t)adc->adc0->readSingle() + (0x2000 << A_channel);	// most significant 3 bytes represent the channel
-	if (A_channel == 0) {
-		A_channel = 2;
-		DataBuf.write(
-	} else {
-		A_channel--;
-	}
-	DataBuf.write(data_temp);
+	ledState = !ledState;
+	digitalWriteFast(LED_BUILTIN, ledState);
+	ADC_vals = adc->readSynchronizedSingle();
+	xData[dataCount] = ADC_vals.result_adc0;
+	zData[dataCount] = ADC_vals.result_adc1;
+	dataCount++;
 	interrupts();
-}
+}*/
 
-void adc_meas_start(void) {
-	adc->adc0->startSingleRead((A_z + A_channel));
+void adc_data_retrieve(void) {
+	ADC_vals = adc->readSynchronizedContinuous();
+	time[dataCount] = micros();
+	xData[dataCount] = ADC_vals.result_adc0;
+	zData[dataCount] = ADC_vals.result_adc1;
+	dataCount++;
+	ledState = !ledState;
+	digitalWriteFast(LED_BUILTIN, ledState);
 }
