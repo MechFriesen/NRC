@@ -12,13 +12,11 @@
 
 #include <ADC.h>
 #include "src/SDIC_FONA/Adafruit_FONA.h"
-#include "src/Circular_Buffer/circular_buffer.h"	// maybe not needed
 #include "src/SD/SD.h"
 #include <SPI.h>
 #include <Metro.h>
 #include <TimeLib.h>
 #include <Timezone.h>
-#include <TimerOne.h>
 #include <IntervalTimer.h>
 #include <SoftwareSerial.h>
 #include <Snooze.h>
@@ -75,29 +73,24 @@ const int SD_CS = BUILTIN_SDCARD; // SD card chip select
 const int MODE = 6;         // mode switch pin
 
 // Timers
-Metro serialPrintTimer = Metro(5000);	//trigger serial print every 10 s
-IntervalTimer adcTrigger;
+Metro serialPrintTimer = Metro(5000);	// triggers serial print every 5 s
+IntervalTimer adcTrigger;				// triggers ADC data retrieval
 
 // Onboard ADC
 ADC *adc = new ADC();
 ADC::Sync_result ADC_vals;
 
 // Global variables
-const uint16_t arraySize = 256;
-unsigned long logDuration[6], sec = 0;	// duration of logging in seconds, sec is incremented with received pps
-uint16_t numTestSeqs = 0, sequenceNum = 1;
-uint16_t outputDivisor = 100, dataCount = 0, xData[arraySize], zData[arraySize];
-uint32_t time[arraySize];
+const uint16_t arraySize = 2048;
+uint16_t numTestSeqs = 0, sequenceNum = 1, dataCount = 0, xData[arraySize], zData[arraySize];
+uint32_t logDuration, time[arraySize];	// duration of logging in seconds, time of sample [us]
 float Batt_volt = 0;
-elapsedMicros ss;
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
 bool ledState = false;
 SDClass SD;
 
 // Get user input for channels to log and duration
 void sessionSetup() {
-	char serial_val;
-	int channel_settle_start = 0, ii = 0;
   
 	Serial.println("\nNew Session\n");
 
@@ -127,100 +120,81 @@ void sessionSetup() {
 // Open SD file system
 void initializeSD() {
 	// Serial.print(F("Initializing SD card..."));
-	if (!SD.begin(SD_CS)) {
-		Serial.printf("Card failed, or not present.\n\r");
-		Serial.printf("Insert SD card.\n\r");
-		while(!SD.begin(SD_CS)) {
-			delay(500);
+	SdFile::dateTimeCallback(SD_dateTime);	// enable the SD file system to retrieve the time
+	File dummyFile;
+	if (!(dummyFile = SD.open("checkSD.txt", FILE_WRITE))) {
+		if (!SD.begin(SD_CS)) {
+			Serial.printf("Card failed, or not present.\n\r");
+			Serial.printf("Insert SD card.\n\r");
+			while(!SD.begin(SD_CS)) {
+				delay(500);
+			}
+			Serial.printf(F("Card initialized.\n\r"));
 		}
-		Serial.printf(F("Card initialized.\n\r"));
 	}
+	else
+		SD.remove("checkSD.txt");
+}
+
+void SD_dateTime(uint16_t* date, uint16_t* time) {	// function that SdFat calls to get time
+  *date = FAT_DATE(year(), month(), day());		// return date using FAT_DATE macro to format fields
+  *time = FAT_TIME(hour(), minute(), second());	// return time using FAT_TIME macro to format fields
 }
 
 // For accurate voltage measurements the battery should be in a quasi-OC state (low current draw)
 float readBattVolt() {
 	float avg = 0, voltage;
-	analogReadResolution(12);
 	for (int ii = 1; ii < 12; ii++) {	// average 12 samples
 		avg = avg + ((float) analogRead(BATT_V)  - avg)/(float)ii;
 		delay(1);
 	}
-	voltage = avg*0.002739 - 0.0493;		// empirical conversion equation
+	voltage = avg*0.002739 - 0.0493;		// empirical conversion equation (assumes 12-bit)
 	return voltage;
 }
 
 // Core logging loop
 void loggingFun(File *dataFile) {
-	uint16_t data;
 	bool stop_logging = false;
 	uint32_t logStartTime;
 	uint16_t sample_rate = 50;	// samples/second
-// 	float sample_rate = 1000000.0/(float)(1000000/sample_rate);
 	
-	pinMode(LED_BUILTIN, OUTPUT);
-
 	// setup ADC (probably going to be moved to separate function)
 	adc->setReference(ADC_REFERENCE::REF_3V3, ADC_0);
-	adc->setAveraging(1); // set number of averages
+	adc->setAveraging(2); // set number of averages
 	adc->setResolution(12); // set bits of resolution
+	adc->setAveraging(2, ADC_1); // set number of averages
+    adc->setResolution(12, ADC_1); // set bits of resolution
 	
 	// apparently these are necessary 
 	adc->enableCompare(1.0/3.3*adc->getMaxValue(ADC_0), 0, ADC_0); // measurement will be ready if value < 1.0V
     adc->enableCompareRange(1.0*adc->getMaxValue(ADC_0)/3.3, 2.0*adc->getMaxValue(ADC_0)/3.3, 0, 1, ADC_0); // ready if value lies out of [1.0,2.0] V
-	adc->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED); // change the conversion speed
-	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED); // change the sampling speed
-	adc->setAveraging(1, ADC_1); // set number of averages
-    adc->setResolution(8, ADC_1); // set bits of resolution
-    adc->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_HIGH_SPEED, ADC_1); // change the conversion speed
-    adc->setSamplingSpeed(ADC_SAMPLING_SPEED::VERY_HIGH_SPEED, ADC_1); // change the sampling speed
-// 	adc->enableInterrupts(ADC_0);
+	adc->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED); // change the conversion speed
+	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED); // change the sampling speed
+    adc->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED, ADC_1); // change the conversion speed
+    adc->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED, ADC_1); // change the sampling speed
 	
-	Serial.printf("Timer period [us]: %i\n", 1000000/sample_rate);
-	//Timer1.initialize(1000000/sample_rate);	// microseconds
-	//Timer1.attachInterrupt(adc_meas_start);
-	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
-
-	//NVIC_SET_PRIORITY(IRQ_ADC0, 0); // 0 = highest priority
-    //NVIC_ENABLE_IRQ(IRQ_ADC0);
+	Serial.printf("Sample Rate [Hz]: %i\n", sample_rate);
 
 	serialPrintTimer.reset();
 	logStartTime = now();
-	elapsedMicros time_us = 0;
-	Serial.print("Start synchronized sampling");
-	Serial.println(adc->startSynchronizedContinuous(A_x, A_z));
+	adc->startSynchronizedContinuous(A_x, A_z);		// continuously samples both input pin simultaneously
+	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
 
 	// logging loop
 	while ( !stop_logging ) {
-// 		if(adc->isComplete()) {
-
-// 		}
-    	// Serial output every 10 seconds for monitoring
-//     	if (serialPrintTimer.check()) {
-// 			serialPrintTimer.reset();
-// 			Serial.printf("%8i,", now()-logStartTime);  // seconds since start of file
-// 			switch((data & 0xE000))  {
-// 				case (0x2000) : Serial.print("\tA_z,");
-// 									break;
-// 				case (0x4000) : Serial.print("\tA_y,");
-// 									break;
-// 				case (0x8000) : Serial.print("\tA_x,");
-// 									break;
-// 			}
-// 			Serial.printf("\t%04i\n", (data & 0x1FFF));
-
-			if ((now() - logStartTime) >= 10) {
-				stop_logging = true;
-			}
-			else if (dataCount > arraySize) {
-				stop_logging = true;
-				adcTrigger.end();
-				//Timer1.stop();
-			}
-// 		}
+		if ((now() - logStartTime) >= 10)
+			stop_logging = true;
+		else if (dataCount > arraySize)
+			stop_logging = true;
 	}
+	adcTrigger.end();	// stop retrieving values
+	adc->stopSynchronizedContinuous();	// stop ADC
+	
+	// Print and save to SD
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
 	for (int ii = 0; ii < arraySize; ii++) {
 		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time[ii], xData[ii], zData[ii]);
+		dataFile->printf("%i\t\t%i\t%i\n", time[ii], xData[ii], zData[ii]);
 	}
 }
 
@@ -404,7 +378,6 @@ void parseTime(char *TimeStr) {
 	
 	setTime(tm.Hour, tm.Minute, tm.Second, tm.Day, tm.Month, tm.Year);
 	Teensy3Clock.set(makeTime(tm));
-	ss = 0;
 // 	digitalClockDisplay();
 }
 
@@ -424,6 +397,8 @@ void setup() {
 	pinMode (EN_SENSE, OUTPUT);
 	pinMode (EN_DATA, OUTPUT);
 	pinMode (NOT_C_ON, OUTPUT);
+	pinMode(LED_BUILTIN, OUTPUT);
+	
 	digitalWrite (EN_DATA, LOW);		// FONA power supply off
 	digitalWrite (NOT_C_ON, HIGH);	// FONA off
 
@@ -483,7 +458,6 @@ void loop() {
 
 	// close down logging
 	dataFile.close();   // close file
-// 	DataBuf.clear();    // clear the data buffer for the next file
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
@@ -494,25 +468,16 @@ void loop() {
 	digitalClockDisplay();
 }
 
-// data producer function
-// TODO: needs modification
-/*void adc0_isr() {
-	noInterrupts();
-	ledState = !ledState;
-	digitalWriteFast(LED_BUILTIN, ledState);
-	ADC_vals = adc->readSynchronizedSingle();
-	xData[dataCount] = ADC_vals.result_adc0;
-	zData[dataCount] = ADC_vals.result_adc1;
-	dataCount++;
-	interrupts();
-}*/
-
+// This function is triggered by the 'adcTrigger' timer
+// It reads the data into an array 
 void adc_data_retrieve(void) {
-	ADC_vals = adc->readSynchronizedContinuous();
-	time[dataCount] = micros();
-	xData[dataCount] = ADC_vals.result_adc0;
-	zData[dataCount] = ADC_vals.result_adc1;
-	dataCount++;
-	ledState = !ledState;
+	ADC_vals = adc->readSynchronizedContinuous();	// retrieve data from ADC register
+	time[dataCount] = micros();						// log time (might not be necessary but it's nice for debugging)
+	xData[dataCount] = ADC_vals.result_adc0;		// adc0 = A_x = pin 18
+	zData[dataCount] = ADC_vals.result_adc1;		// adc1 = A_z = pin 16
+	dataCount++;									// increment index
+	
+	// blink for debugging
+	ledState = !ledState;						
 	digitalWriteFast(LED_BUILTIN, ledState);
 }
