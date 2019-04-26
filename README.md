@@ -12,6 +12,17 @@ Be sure to record meta-data like which moon board (eg. R2A) is being used. This 
 ## Teensy Setup
 https://www.pjrc.com/teensy/tutorial.html
 
+## Connections
+
+| LSM9DS1 | Teensy | (Breadboard) | SPI Name |
+|---------|--------|--------------|----------|
+| VIN     | Vin    | +            |          |
+| GND     | GND    | -            |          |
+| SCL     | 13     | 20 (R)       | SCK0     |
+| SDA     | 11     | 19 (L)       | MOSI0    |
+| CSAG    | 15     | 18 (R)       | CS0      |
+| SDOAG   | 12     | 20 (L)       | MISO0    |
+
 ## Libraries used
 * Hologram backend https://github.com/benstr/hologram-SIMCOM 
 * GPS for timestamps https://github.com/adafruit/Adafruit_FONA
