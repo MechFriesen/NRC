@@ -1,4 +1,4 @@
-﻿# NRC (*information below may not be applicable and should be modified*)
+﻿# NRC
 Buoyancy testing for prototype 1: Floating Pavilion
  
 ## How to use the .hex files.
