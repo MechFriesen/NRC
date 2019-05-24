@@ -23,9 +23,9 @@ https://www.pjrc.com/teensy/tutorial.html
 | CSAG    | 15     | 18 (R)       | CS0      |
 | SDOAG   | 12     | 20 (L)       | MISO0    |
 | Wind Speed |
-| _some colour_ | 2 |
+| black | 2 |
 | Wind Direction |
-| _some colour_ | 20 |
+| green | 20 |
 
 ## Libraries used
 * Hologram backend https://github.com/benstr/hologram-SIMCOM 
