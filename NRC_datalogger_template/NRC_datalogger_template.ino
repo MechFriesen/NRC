@@ -23,18 +23,13 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_LSM9DS1.h>
-#include <math.h> //wind sketch
 //#include <Adafruit_Sensor.h>
 
 // Sleep related macros
 #define AWAKE_TIME_START_HRS 1	// Local
 #define AWAKE_TIME_END_HRS   7	// Local
 #define LSM9DS1_XGCS 15
-
-// Wind Sketch taken from cactus.io
-#define PinWindSpeed (2) // location of anemometer sensor
-#define PinWindDrctn (20) // pin of the wind vane sensor
-#define VaneOffset 0;  // define the anemomter offset from magnetic north
+#define PinWindSpeed 2
 
 // Firmware version string
 static char FirmwareVersion[] = "v2.1.6 - beta - Wake 1:00-7:00 Local Time";
@@ -88,23 +83,17 @@ const int MODE = 6;         // mode switch pin
 Metro serialPrintTimer = Metro(5000);	// triggers serial print every 5 s
 IntervalTimer adcTrigger;				// triggers ADC data retrieval
 Metro AccelTimer = Metro(200); // triggers accelerometer/gyro data reterival
-Metro WindDirectionTimer = Metro(2500);
-Metro WindSpeedTimer = Metro(2500);
-
-// Anemomter volatile
-volatile unsigned long Rotations; // cup rotation counter used in interrupt routine
-volatile unsigned long ContactBounceTime; // Timer to avoid contact bounce in interrupt routine
+Metro WindDirectionTimer = Metro(5000);
 
 // Onboard ADC
 ADC *adc = new ADC();
 ADC::Sync_result ADC_vals;
 
 // Global variables
-const uint16_t arraySize_onboard = 2048, arraySize_external = 2048;
-int VaneValue, Direction, CalDirection; //wind sketch variables
-uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], zData[arraySize_onboard];
+const uint16_t arraySize_onboard = 48, arraySize_external = 48;
+uint16_t numTestSeqs = 0, sequenceNum = 1, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], zData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
-float WindSpeed, Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
+float Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
 bool ledState = false;
 SDClass SD;
@@ -173,7 +162,7 @@ float readBattVolt() {
 }
 
 // Core logging loop
-void loggingFun() {
+void loggingFun(File *dataFile) {
 	bool stop_logging = false;
 	uint32_t logStartTime;
 	uint16_t sample_rate = 50;	// samples/second
@@ -196,41 +185,19 @@ void loggingFun() {
 	Serial.printf("Sample Rate [Hz]: %i\n", sample_rate);
 
 	setupSensor();
-
-	// logs at the period of the external sensor (Adafruit LSM9DS1)
+	// logs at the frequency of the external sensor (Adafruit LSM9DS1)
 	AccelTimer.interval(external_period);
 	AccelTimer.reset();
 
-	//Timers for wind speed and dirction; logs in the interval wind_time
-	WindDirectionTimer.interval(wind_time);
-	WindDirectionTimer.reset();
-
-	WindSpeedTimer.interval(wind_time);
-	WindSpeedTimer.reset();
-
-
-	logStartTime = now(); //current time
-
+	logStartTime = now();
 	adc->startSynchronizedContinuous(A_x, A_z);		// continuously samples both input pin simultaneously
 	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
-
-	//main board and external sensor
 	dataCount = 0;
 	dataCount_external = 0;
 
-	// Anemomter setup
-	LastValue = 0; //Last vane value
-	VaneValue = 0; //Vane Value
-	Rotations = 0; // Set Rotations to 0 ready for calculations
-	Direction = 0; // Set to 0
-	CalDirection = 0;
-
-	pinMode(PinWindSpeed, INPUT_PULLUP); // sets the digital pin as output
-	attachInterrupt(digitalPinToInterrupt(PinWindSpeed), isr_rotation, FALLING); // the wind interrupt here
-
 	// logging loop
+
 	while ( !stop_logging ) {
-		//external sensor
 		  sensors_event_t a, g, temp;
 		if (AccelTimer.check()) {
 			time_external[dataCount_external] = micros();
@@ -247,24 +214,23 @@ void loggingFun() {
 			stop_logging = true;
 		else if (dataCount > arraySize_external)
 			stop_logging = true;
-
-			//Wind Direction
-			if (WindDirectionTimer.check()) {
-				getWindDirection();
-			}
-			//Wind Speed
-			if(WindSpeedTimer.check()) {
-				// convert to mp/h using the formula V=P(2.25/T)
-				// V = P(2.25/3) = P * 0.75
-				WindSpeed = Rotations * 0.75;
-				Serial.printf("Wind Speed = %i\n", WindSpeed);
-				Rotations = 0; //Reset count for next sample
-				}
 	}
 	adcTrigger.end();	// stop retrieving values
 	adc->stopSynchronizedContinuous();	// stop ADC
 
-	// Print and save to SD--> moved to loop()
+	// Print
+	Serial.println("ii\ttime [us]\tA_x\tA_y\tAccel X\tAccel Y\tAccel Z\tGyro X\tGyro Y\tGyro Z");
+// save to SD--> move to loop()
+for (int ii = 0; ii < arraySize_onboard; ii++) {
+	Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], zData[ii]);
+	dataFile->printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], zData[ii]);
+	//dataFile->close();
+}
+for (int ii = 0; ii < arraySize_external; ii++) {
+	Serial.printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
+	dataFile->printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
+	//dataFile->close();
+}
 }
 
 // example sketch from LSM9DS1 library; prints the acceleration and gyroscope data
@@ -505,8 +471,7 @@ void setup() {
 }
 
 void loop() {
-	char filename_on[20];
-	char filename_ex[20];
+	char filename[20];
 
 	// check if this test is part of a set
 	if ((sequenceNum > numTestSeqs) && !infiniteLog ) {
@@ -516,78 +481,48 @@ void loop() {
 	initializeSD();
 
 	// get user input for session parameters
-	if (!sessionStarted) sessionSetup();
+	//if (!sessionStarted) sessionSetup();
 
 	// Display test parameters
 	Serial.println("\nStarting Session");
 	Serial.printf("Sequence %i of %i\n\r", sequenceNum, numTestSeqs);
 
-
 	// Open file
-	/*
 	sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
 	File dataFile;	// create file
 	while (!(dataFile = SD.open(filename, FILE_WRITE))) {	// try to open file with write permission
 		Serial.println("There was a problem with the SD card.");
 		sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
 	}
-	*/
-	/*
-	sprintf(filename_on, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
-	Serial.printf("File: %s\n\r", filename_on);
-	sprintf(filename_ex, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
-	Serial.printf("File: %s\n\r", filename_ex);
-	*/
+	Serial.printf("File: %s\n\r", filename);
 	//Serial.printf("Channel: %i\n\r", channel[sequence_channel_num]);
 	//Serial.printf("Duration: %i minutes\n\n\r", logDuration[sequence_channel_num]/60);
 
 	// print headers (TODO: Update for NRC project)
-	//Serial.printf("Status, Time (s), %s [LSB], PPS received\n\r", "Acceleraton");
-	//dataFile.printf("Microseconds, Seconds, %s [LSB]\n\r", "Acceleraton");
+	Serial.printf("Status, Time (s), %s [LSB], PPS received\n\r", "Acceleration");
+	dataFile.printf("Microseconds, Seconds, %s [LSB]\n\r", "Acceleration");
 
 	// start logging
-	loggingFun();
-
-
-	// print on serial monitor and save onboard acceleration to SD
-	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
-	Serial.println("ii\ttime [us]\tA_x\tA_y");
-	for (int ii = 0; ii < arraySize_onboard; ii++) {
-		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], zData[ii]);
-		dataFile_onboard.printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], zData[ii]);
+	loggingFun(&dataFile);
+	// save external acceleration to SD
+	/*
+	for (int ii = 0; ii < numberOfAccelerationDAtaPoints; ii++){
+		create file
+		print data to file
+		close file
 	}
-	dataFile_onboard.close();
+	*/
+	// save onboard accel to SD
+	// save wind data to SD
 
-	// print on serial monitor and save external accel to SD
-	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
-  Serial.println("ii\ttime [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
-	for (int ii = 0; ii < arraySize_external; ii++) {
-		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
-		dataFile_external.printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
-	}
-	dataFile_external.close();
 
 	// close down logging
-	// dataFile.close();   // close file
-
-//wind sketch
-	Serial.println("Davis Anemometer Test");
-  Serial.println("Speed (MPH)\tKnots\tDirection");
-
-// save wind data to SD
-
-/*
-	Serial.print(WindSpeed); Serial.print("\t\t");
-	Serial.print(getKnots(WindSpeed)); Serial.print("\t");
-	Serial.print(CalDirection);
-	getHeading(CalDirection); Serial.print("\n");
-*/
-/*
-	Serial.printf("Finished logging to %s and %s\n\n\r", filename_on, filename_ex);
+	dataFile.close();   // close file
+	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
 	sequenceNum++;          // increment test number for multi-file sessions
-*/
+
 	// Go to sleep now (maybe, if the time is right)
 	sleepCheck();
 	digitalClockDisplay();
@@ -607,56 +542,21 @@ void adc_data_retrieve(void) {
 	digitalWriteFast(LED_BUILTIN, ledState);
 }
 
-// Anemomter functions
-	// interrupt calls to increment the rotation count
-void isr_rotation() {
-	//if ((millis() - ContactBounceTime) > 15 ) { // debounce the switch contact.
-	Rotations++;
-	//ContactBounceTime = millis();
-	//}
+void isrService() {
+/* cli();
+Serial.println("At ISR0");
+sei(); */
 }
 
-	// Convert MPH to Knots
-float getKnots(float speed) {
-	return speed * 0.868976;
-}
-	//Get Wind Direction
-void getWindDirection() {
-	VaneValue = analogRead(PinWindDrctn);
-	Serial.printf("Vane value = %i\n", VaneValue);
-	Direction = map(VaneValue, 0, adc->getMaxValue(ADC_0), 0, 359);
-	Serial.printf("Direction = %i\n", Direction);
-	CalDirection = Direction + VaneOffset;
-	Serial.printf("CalDirection = %i\n", CalDirection);
-}
+//wind speed interupt
+void setupWindSpeed() {
 
-	//Converts compass direction to heading
-void getHeading(int direction) {
-	if(direction < 22) {
-		Serial.print(" N");
-		}
-	else if (direction < 67) {
-		Serial.print(" NE");
-		}
-	else if (direction < 112) {
-		Serial.print(" E");
-		}
-	else if (direction < 157) {
-		Serial.print(" SE");
-		}
-	else if (direction < 212) {
-		Serial.print(" S");
-		}
-	else if (direction < 247) {
-		Serial.print(" SW");
-		}
-	else if (direction < 292) {
-		Serial.print(" W");
-		}
-	else if (direction < 337) {
-		Serial.print(" NW");
-		}
-	else {
-		Serial.print(" N");
-		}
-}
+	pinMode(PinWindSpeed, INPUT); // sets the digital pin as output
+
+	attachInterrupt(PinWindSpeed, isrService, FALLING); // interrrupt 1 is data ready
+	}
+
+void loopWindSpeed() {
+	delay(1000);
+	Serial.println("Running");
+	}
