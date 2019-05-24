@@ -23,9 +23,9 @@ https://www.pjrc.com/teensy/tutorial.html
 | CSAG    | 15     | 18 (R)       | CS0      |
 | SDOAG   | 12     | 20 (L)       | MISO0    |
 | Wind Speed |
-| _some colour_ | 2 |
+| black | 2 |
 | Wind Direction |
-| _some colour_ | 20 |
+| green | 20 |
 
 ## Libraries used
 * Hologram backend https://github.com/benstr/hologram-SIMCOM 
@@ -34,6 +34,10 @@ https://www.pjrc.com/teensy/tutorial.html
 * Circular array buffer https://github.com/tonton81/Circular_Buffer
 
 ## Sensor Specifications and conversion equations
+
+### Anemometer
+[Davis 6410](https://www.davisinstruments.com/product/anemometer-for-vantage-pro2-vantage-pro/)  
+[Datasheet](https://www.davisinstruments.com/product_documents/weather/spec_sheets/6410_SS.pdf)
 ### Temperature, main board (TMP20)
 Conversion equations
 * Parabolic (-55 to 125˚C, ±2.5˚C): T [˚C] = -1481.96 + sqrt(2.1962 * 10^6 + (1.8639 - V)/(3.88 * 10^-6)) 
