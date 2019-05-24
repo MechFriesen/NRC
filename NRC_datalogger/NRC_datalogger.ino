@@ -100,8 +100,8 @@ ADC *adc = new ADC();
 ADC::Sync_result ADC_vals;
 
 // Global variables
-const uint16_t arraySize_onboard = 2048, arraySize_external = 2048;
-int VaneValue, Direction, CalDirection; //wind sketch variables
+const uint16_t arraySize_onboard = 48, arraySize_external = 48;
+int VaneValue, Direction, CalDirection, LastValue; //wind sketch variables
 uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], zData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
 float WindSpeed, Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
