@@ -101,7 +101,7 @@ ADC::Sync_result ADC_vals;
 
 // Global variables
 const uint16_t arraySize_onboard = 48, arraySize_external = 48;
-int VaneValue, Direction, CalDirection, LastValue; //wind sketch variables
+int VaneValue, Direction, CalDirection; //wind sketch variables
 uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], yData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
 float WindSpeed, Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
@@ -219,7 +219,6 @@ void loggingFun() {
 	dataCount_external = 0;
 
 	// Anemomter setup
-	LastValue = 0; //Last vane value
 	VaneValue = 0; //Vane Value
 	Rotations = 0; // Set Rotations to 0 ready for calculations
 	Direction = 0; // Set to 0
@@ -245,7 +244,7 @@ void loggingFun() {
 		}
 		if ((now() - logStartTime) >= 10)
 			stop_logging = true;
-		else if (dataCount > arraySize_onboard)
+		else if (dataCount > arraySize_external)
 			stop_logging = true;
 
 			//Wind Direction
