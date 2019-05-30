@@ -102,7 +102,7 @@ ADC::Sync_result ADC_vals;
 // Global variables
 const uint16_t arraySize_onboard = 48, arraySize_external = 48;
 int VaneValue, Direction, CalDirection, LastValue; //wind sketch variables
-uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], zData[arraySize_onboard];
+uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], yData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
 float WindSpeed, Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
@@ -211,7 +211,7 @@ void loggingFun() {
 
 	logStartTime = now(); //current time
 
-	adc->startSynchronizedContinuous(A_x, A_z);		// continuously samples both input pin simultaneously
+	adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
 	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
 
 	//main board and external sensor
@@ -245,7 +245,7 @@ void loggingFun() {
 		}
 		if ((now() - logStartTime) >= 10)
 			stop_logging = true;
-		else if (dataCount > arraySize_external)
+		else if (dataCount > arraySize_onboard)
 			stop_logging = true;
 
 			//Wind Direction
@@ -553,8 +553,8 @@ void loop() {
 	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
 	for (int ii = 0; ii < arraySize_onboard; ii++) {
-		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], zData[ii]);
-		dataFile_onboard.printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], zData[ii]);
+		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], yData[ii]);
+		dataFile_onboard.printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], yData[ii]);
 	}
 	dataFile_onboard.close();
 
@@ -599,7 +599,8 @@ void adc_data_retrieve(void) {
 	ADC_vals = adc->readSynchronizedContinuous();	// retrieve data from ADC register
 	time_onboard[dataCount] = micros();						// log time (might not be necessary but it's nice for debugging)
 	xData[dataCount] = ADC_vals.result_adc0;		// adc0 = A_x = pin 18
-	zData[dataCount] = ADC_vals.result_adc1;		// adc1 = A_z = pin 16
+	// zData[dataCount] = ADC_vals.result_adc1;		// adc1 = A_z = pin 16
+	yData[dataCount] = ADC_vals.result_adc1;		// adc1 = A_y = pin 17
 	dataCount++;									// increment index
 
 	// blink for debugging
