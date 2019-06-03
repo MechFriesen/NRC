@@ -100,9 +100,9 @@ ADC *adc = new ADC();
 ADC::Sync_result ADC_vals;
 
 // Global variables
-const uint16_t arraySize_onboard = 48, arraySize_external = 48;
+const uint16_t arraySize_onboard = 2048, arraySize_external = 2048;
 int VaneValue, Direction, CalDirection; //wind sketch variables
-uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 250, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], yData[arraySize_onboard];
+uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 5000, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], yData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
 float WindSpeed, Batt_volt = 0, array_ax[arraySize_external], array_ay[arraySize_external], array_az[arraySize_external], array_gx[arraySize_external], array_gy[arraySize_external], array_gz[arraySize_external];
 bool useFONA = false, sessionStarted = false, infiniteLog = false, externalSensors = false;
@@ -172,10 +172,7 @@ float readBattVolt() {
 	return voltage;
 }
 
-// Core logging loop
-void loggingFun() {
-	bool stop_logging = false;
-	uint32_t logStartTime;
+void setupADC() {
 	uint16_t sample_rate = 50;	// samples/second
 
 	// setup ADC (probably going to be moved to separate function)
@@ -192,6 +189,18 @@ void loggingFun() {
 	adc->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED); // change the sampling speed
     adc->setConversionSpeed(ADC_CONVERSION_SPEED::HIGH_SPEED, ADC_1); // change the conversion speed
     adc->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED, ADC_1); // change the sampling speed
+
+		adcTrigger.priority(0);
+		adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
+		adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
+}
+
+// Core logging loop
+void loggingFun() {
+	bool stop_logging = false;
+	uint32_t logStartTime;
+	uint16_t sample_rate = 50;	// samples/second
+
 
 	Serial.printf("Sample Rate [Hz]: %i\n", sample_rate);
 
@@ -211,6 +220,9 @@ void loggingFun() {
 
 	logStartTime = now(); //current time
 
+	setupADC();
+
+	adcTrigger.priority(0);
 	adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
 	adcTrigger.begin(adc_data_retrieve, 1000000/sample_rate);
 
@@ -230,38 +242,46 @@ void loggingFun() {
 	// logging loop
 	while ( !stop_logging ) {
 		//external sensor
-		  sensors_event_t a, g, temp;
+		sensors_event_t a, g, temp;
 		if (AccelTimer.check()) {
-			time_external[dataCount_external] = micros();
-			lsm.getEvent(&a, &g, &temp);
-			array_ax[dataCount_external] = a.acceleration.x;
-			array_ay[dataCount_external] = a.acceleration.y;
-			array_az[dataCount_external] = a.acceleration.z;
-			array_gx[dataCount_external] = g.gyro.x;
-			array_gy[dataCount_external] = g.gyro.y;
-			array_gz[dataCount_external] = g.gyro.z;
-			dataCount_external++;
+		time_external[dataCount_external] = micros();
+		lsm.getEvent(&a, &g, &temp);
+		array_ax[dataCount_external] = a.acceleration.x;
+		array_ay[dataCount_external] = a.acceleration.y;
+		array_az[dataCount_external] = a.acceleration.z;
+		array_gx[dataCount_external] = g.gyro.x;
+		array_gy[dataCount_external] = g.gyro.y;
+		array_gz[dataCount_external] = g.gyro.z;
+		dataCount_external++;
+	}
+
+		//Wind Direction
+		if (WindDirectionTimer.check()) {
+			getWindDirection();
+			adcTrigger.priority(0);
+			adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
 		}
+		//Wind Speed
+		if(WindSpeedTimer.check()) {
+			// convert to mp/h using the formula V=P(2.25/T)
+			// V = P(2.25/3) = P * 0.75
+			WindSpeed = Rotations * 0.75;
+			Serial.printf("Wind Speed = %i\n", WindSpeed);
+			Rotations = 0; //Reset count for next sample
+			adcTrigger.priority(0);
+			adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
+			}
+
+			//stop logging
 		if ((now() - logStartTime) >= 10)
 			stop_logging = true;
 		else if (dataCount > arraySize_external)
 			stop_logging = true;
-
-			//Wind Direction
-			if (WindDirectionTimer.check()) {
-				getWindDirection();
-			}
-			//Wind Speed
-			if(WindSpeedTimer.check()) {
-				// convert to mp/h using the formula V=P(2.25/T)
-				// V = P(2.25/3) = P * 0.75
-				WindSpeed = Rotations * 0.75;
-				Serial.printf("Wind Speed = %i\n", WindSpeed);
-				Rotations = 0; //Reset count for next sample
-				}
 	}
 	adcTrigger.end();	// stop retrieving values
 	adc->stopSynchronizedContinuous();	// stop ADC
+
+
 
 	// Print and save to SD--> moved to loop()
 }
@@ -570,8 +590,8 @@ void loop() {
 	// dataFile.close();   // close file
 
 //wind sketch
-	Serial.println("Davis Anemometer Test");
-  Serial.println("Speed (MPH)\tKnots\tDirection");
+// 	Serial.println("Davis Anemometer Test");
+//   Serial.println("Speed (MPH)\tKnots\tDirection");
 
 // save wind data to SD
 
@@ -581,12 +601,12 @@ void loop() {
 	Serial.print(CalDirection);
 	getHeading(CalDirection); Serial.print("\n");
 */
-/*
+
 	Serial.printf("Finished logging to %s and %s\n\n\r", filename_on, filename_ex);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
 	sequenceNum++;          // increment test number for multi-file sessions
-*/
+
 	// Go to sleep now (maybe, if the time is right)
 	sleepCheck();
 	digitalClockDisplay();
@@ -623,11 +643,11 @@ float getKnots(float speed) {
 	//Get Wind Direction
 void getWindDirection() {
 	VaneValue = analogRead(PinWindDrctn);
-	Serial.printf("Vane value = %i\n", VaneValue);
+  Serial.printf("Vane value = %i\n", VaneValue);
 	Direction = map(VaneValue, 0, adc->getMaxValue(ADC_0), 0, 359);
 	Serial.printf("Direction = %i\n", Direction);
 	CalDirection = Direction + VaneOffset;
-	Serial.printf("CalDirection = %i\n", CalDirection);
+	// Serial.printf("CalDirection = %i\n", CalDirection);
 }
 
 	//Converts compass direction to heading
