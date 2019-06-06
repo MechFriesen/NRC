@@ -266,7 +266,7 @@ void loggingFun() {
 			// convert to mp/h using the formula V=P(2.25/T)
 			// V = P(2.25/3) = P * 0.75
 			WindSpeed = Rotations * 0.75;
-			Serial.printf("Wind Speed = %i\n", WindSpeed);
+			// Serial.printf("Wind Speed = %i\n", WindSpeed);
 			Rotations = 0; //Reset count for next sample
 			adcTrigger.priority(0);
 			adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
@@ -526,6 +526,7 @@ void setup() {
 void loop() {
 	char filename_on[20];
 	char filename_ex[20];
+	char filename_w[20];
 
 	// check if this test is part of a set
 	if ((sequenceNum > numTestSeqs) && !infiniteLog ) {
@@ -551,12 +552,15 @@ void loop() {
 		sprintf(filename, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
 	}
 	*/
-	/*
-	sprintf(filename_on, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
+	// create files
+	sprintf(filename_on, "%02i%02i%02i%s.csv", month(), day(), hour(), "O");  // generate onboard sensor filename
+	sprintf(filename_ex, "%02i%02i%02i%s.csv", month(), day(), hour(), "E");  // generate external sensor filename
+	sprintf(filename_w, "%02i%02i%02i%s.csv", month(), day(), hour(), "W");	//generate anemometer filename
+	// print file names on serial monitor
 	Serial.printf("File: %s\n\r", filename_on);
-	sprintf(filename_ex, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());  // generate filename
 	Serial.printf("File: %s\n\r", filename_ex);
-	*/
+	Serial.printf("File: %s\n\r", filename_w);
+
 	//Serial.printf("Channel: %i\n\r", channel[sequence_channel_num]);
 	//Serial.printf("Duration: %i minutes\n\n\r", logDuration[sequence_channel_num]/60);
 
@@ -567,10 +571,10 @@ void loop() {
 	// start logging
 	loggingFun();
 
-
-	// print on serial monitor and save onboard acceleration to SD
+		// print on serial monitor and save onboard acceleration to SD
 	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
+	dataFile_onboard.println("time [us]\tA_x\tA_y");
 	for (int ii = 0; ii < arraySize_onboard; ii++) {
 		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], yData[ii]);
 		dataFile_onboard.printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], yData[ii]);
@@ -580,6 +584,7 @@ void loop() {
 	// print on serial monitor and save external accel to SD
 	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
   Serial.println("ii\ttime [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
+	dataFile_external.println("time [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
 	for (int ii = 0; ii < arraySize_external; ii++) {
 		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 		dataFile_external.printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
@@ -589,20 +594,64 @@ void loop() {
 	// close down logging
 	// dataFile.close();   // close file
 
-//wind sketch
-// 	Serial.println("Davis Anemometer Test");
-//   Serial.println("Speed (MPH)\tKnots\tDirection");
-
-// save wind data to SD
-
-/*
-	Serial.print(WindSpeed); Serial.print("\t\t");
-	Serial.print(getKnots(WindSpeed)); Serial.print("\t");
+	//wind sketch
+	File dataFile_wind = SD.open(filename_w, FILE_WRITE);
+	Serial.println("Speed (MPH)\tKnots\tDirection");
+	dataFile_wind.println("Speed (MPH)\tKnots\tDirection");
+	Serial.print(WindSpeed); Serial.print("\t\t"); Serial.print(getKnots(WindSpeed)); Serial.print("\t");
 	Serial.print(CalDirection);
-	getHeading(CalDirection); Serial.print("\n");
-*/
+	dataFile_wind.print(WindSpeed); dataFile_wind.print("\t\t"); dataFile_wind.print(getKnots(WindSpeed)); dataFile_wind.print("\t");
+	dataFile_wind.printf("%i\t", CalDirection);
 
-	Serial.printf("Finished logging to %s and %s\n\n\r", filename_on, filename_ex);
+	if(CalDirection < 22) {
+		Serial.print(" N\n");
+		dataFile_wind.printf(" N\n");
+		}
+	else if (CalDirection < 67) {
+		Serial.print(" NE\n");
+		dataFile_wind.printf(" NE\n");
+		}
+	else if (CalDirection < 112) {
+		Serial.print(" E\n");
+		dataFile_wind.printf(" E\n");
+		}
+	else if (CalDirection < 157) {
+		Serial.print(" SE\n");
+		dataFile_wind.printf(" SE\n");
+		}
+	else if (CalDirection < 212) {
+		Serial.print(" S\n");
+		dataFile_wind.printf(" S\n");
+		}
+	else if (CalDirection < 247) {
+		Serial.print(" SW\n");
+		dataFile_wind.printf(" SW\n");
+		}
+	else if (CalDirection < 292) {
+		Serial.print(" W\n");
+		dataFile_wind.printf(" W\n");
+		}
+	else if (CalDirection < 337) {
+		Serial.print(" NW\n");
+		dataFile_wind.printf(" NW\n");
+		}
+	else {
+		Serial.print(" N\n");
+		dataFile_wind.printf(" N\n");
+		}
+
+	dataFile_wind.close();
+
+
+	// save wind data to SD
+
+		// Serial.print(WindSpeed); Serial.print("\t\t");
+		// Serial.print(getKnots(WindSpeed)); Serial.print("\t");
+		// Serial.print(CalDirection);
+		// getHeading(CalDirection); Serial.print("\n");
+
+
+	Serial.printf("Finished logging to %s, %s and %s\n\n\r", filename_on, filename_ex, filename_w);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
 	sequenceNum++;          // increment test number for multi-file sessions
@@ -643,40 +692,49 @@ float getKnots(float speed) {
 	//Get Wind Direction
 void getWindDirection() {
 	VaneValue = analogRead(PinWindDrctn);
-  Serial.printf("Vane value = %i\n", VaneValue);
+  // Serial.printf("Vane value = %i\n", VaneValue);
 	Direction = map(VaneValue, 0, adc->getMaxValue(ADC_0), 0, 359);
-	Serial.printf("Direction = %i\n", Direction);
+	// Serial.printf("Direction = %i\n", Direction);
 	CalDirection = Direction + VaneOffset;
 	// Serial.printf("CalDirection = %i\n", CalDirection);
 }
 
 	//Converts compass direction to heading
-void getHeading(int direction) {
-	if(direction < 22) {
-		Serial.print(" N");
-		}
-	else if (direction < 67) {
-		Serial.print(" NE");
-		}
-	else if (direction < 112) {
-		Serial.print(" E");
-		}
-	else if (direction < 157) {
-		Serial.print(" SE");
-		}
-	else if (direction < 212) {
-		Serial.print(" S");
-		}
-	else if (direction < 247) {
-		Serial.print(" SW");
-		}
-	else if (direction < 292) {
-		Serial.print(" W");
-		}
-	else if (direction < 337) {
-		Serial.print(" NW");
-		}
-	else {
-		Serial.print(" N");
-		}
-}
+// void getHeading(int direction) {
+// 	if(direction < 22) {
+// 		Serial.print(" N");
+// 		dataFile_wind.printf(" N");
+// 		}
+// 	else if (direction < 67) {
+// 		Serial.print(" NE");
+// 		dataFile_wind.printf(" NE");
+// 		}
+// 	else if (direction < 112) {
+// 		Serial.print(" E");
+// 		dataFile_wind.printf(" E");
+// 		}
+// 	else if (direction < 157) {
+// 		Serial.print(" SE");
+// 		dataFile_wind.printf(" SE");
+// 		}
+// 	else if (direction < 212) {
+// 		Serial.print(" S");
+// 		dataFile_wind.printf(" S");
+// 		}
+// 	else if (direction < 247) {
+// 		Serial.print(" SW");
+// 		dataFile_wind.printf(" SW");
+// 		}
+// 	else if (direction < 292) {
+// 		Serial.print(" W");
+// 		dataFile_wind.printf(" W");
+// 		}
+// 	else if (direction < 337) {
+// 		Serial.print(" NW");
+// 		dataFile_wind.printf(" NW");
+// 		}
+// 	else {
+// 		Serial.print(" N");
+// 		dataFile_wind.printf(" N");
+// 		}
+// }
