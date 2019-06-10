@@ -29,6 +29,8 @@
 // Sleep related macros
 #define AWAKE_TIME_START_HRS 1	// Local
 #define AWAKE_TIME_END_HRS   7	// Local
+
+// External board
 #define LSM9DS1_XGCS 15
 
 // Wind Sketch taken from cactus.io
@@ -175,7 +177,7 @@ float readBattVolt() {
 void setupADC() {
 	uint16_t sample_rate = 50;	// samples/second
 
-	// setup ADC (probably going to be moved to separate function)
+	// setup ADC
 	adc->setReference(ADC_REFERENCE::REF_3V3, ADC_0);
 	adc->setAveraging(2); // set number of averages
 	adc->setResolution(12); // set bits of resolution
@@ -303,38 +305,49 @@ void setupSensor() {
 // Checks if the logger should sleep and if so it goes to sleep
 void sleepCheck () {//
   int who; // For snooze library
-
-  // Check mode switch pin state
-  if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
+	Serial.println("on");
 
   // Check if Teensy needs to sleep; return if Teensy is in awake period
   if ((hour() >= AWAKE_TIME_START_HRS) && (hour()< AWAKE_TIME_END_HRS))
     return;
+		Serial.println("running");
+
+		// Check mode switch pin state
+	  // if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
+		// Serial.println("off");
 
   // Time is between 04:00 & 24:00
   if((hour() >= AWAKE_TIME_END_HRS)) {
     if(minute()>0) {
       sleep_period_hrs  = 24-(hour()+1)+AWAKE_TIME_START_HRS;
+			Serial.println("a");
       sleep_period_mins = 60-minute();
+			Serial.println("b");
       sleep_period_secs = 0;
+			Serial.println("c");
     }
     else {
       sleep_period_hrs  = 24-hour()+AWAKE_TIME_START_HRS;
+			Serial.println("d");
       sleep_period_mins = 0;
+			Serial.println("e");
       sleep_period_secs = 0;
+			Serial.println("f");
     }
   }
   // Time is between 00:00 & 02:00
   else if (hour() < AWAKE_TIME_START_HRS) {
     if(minute()>0) {
+			Serial.println("g");
       sleep_period_hrs  = AWAKE_TIME_START_HRS - (hour()+1);
       sleep_period_mins = 60-minute();
 			sleep_period_secs = 0;
   	}
   	else {
-			sleep_period_hrs  = AWAKE_TIME_START_HRS - hour();
+			Serial.println("h");
+			sleep_period_hrs  = 0; //AWAKE_TIME_START_HRS - hour();
 			sleep_period_mins = 0;
-			sleep_period_secs = 0;
+			sleep_period_secs = 10;
     }
   }
 
@@ -357,11 +370,13 @@ void sleepCheck () {//
  	Serial.printf("Sleep Period MINS = %i\n\r", sleep_period_mins);
  	Serial.printf("Sleep Period SECS = %i\n\r", sleep_period_secs);
 
+	// Set RTC alarm wake up in (hours, minutes, seconds).
+	// Currently the code runs so that it hits the "h" loop and then goes to the "abc" loop
+	alarm.setRtcTimer(sleep_period_hrs, sleep_period_mins, sleep_period_secs);// hour, min, sec
+
  	delay(1000);
 
- 	// Set RTC alarm wake up in (hours, minutes, seconds).
-  alarm.setRtcTimer(sleep_period_hrs, sleep_period_mins, sleep_period_secs);// hour, min, sec
-  // Send Teensy to deep sleep
+ 	// Send Teensy to deep sleep
   who = Snooze.hibernate( config_teensy36 );
   setTime(Teensy3Clock.get()); // load RTC time onto MCU
   if (who == 35) // rtc wakeup value
@@ -536,7 +551,7 @@ void loop() {
 	initializeSD();
 
 	// get user input for session parameters
-	if (!sessionStarted) sessionSetup();
+	// if (!sessionStarted) sessionSetup();
 
 	// Display test parameters
 	Serial.println("\nStarting Session");
@@ -570,7 +585,7 @@ void loop() {
 
 	// start logging
 	loggingFun();
-
+/*
 		// print on serial monitor and save onboard acceleration to SD
 	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
@@ -642,7 +657,7 @@ void loop() {
 
 	dataFile_wind.close();
 
-
+*/
 	// save wind data to SD
 
 		// Serial.print(WindSpeed); Serial.print("\t\t");
@@ -658,6 +673,7 @@ void loop() {
 
 	// Go to sleep now (maybe, if the time is right)
 	sleepCheck();
+
 	digitalClockDisplay();
 }
 
