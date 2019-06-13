@@ -9,7 +9,6 @@
 
  	This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 */
-
 #include <ADC.h>
 #include "src/SDIC_FONA/Adafruit_FONA.h"
 #include "src/SD/SD.h"
@@ -310,7 +309,8 @@ void sleepCheck () {//
   // Check if Teensy needs to sleep; return if Teensy is in awake period
   if ((hour() >= AWAKE_TIME_START_HRS) && (hour()< AWAKE_TIME_END_HRS))
     return;
-		Serial.println("running");
+		//Serial.println("running");
+		Serial.printf("%i\t%i\t%i\t%i\n", AWAKE_TIME_START_HRS, AWAKE_TIME_END_HRS, hour(), minute());// 1 7
 
 		// Check mode switch pin state
 	  // if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
@@ -318,37 +318,61 @@ void sleepCheck () {//
 
   // Time is between 04:00 & 24:00
   if((hour() >= AWAKE_TIME_END_HRS)) {
-    if(minute()>0) {
-      sleep_period_hrs  = 24-(hour()+1)+AWAKE_TIME_START_HRS;
+		if (minute() % 15 == 0) {
 			Serial.println("a");
-      sleep_period_mins = 60-minute();
+			sleep_period_hrs = 0;
+			sleep_period_mins = 1;
+			sleep_period_secs = 0;
+		}
+		else {
 			Serial.println("b");
-      sleep_period_secs = 0;
-			Serial.println("c");
+			sleep_period_hrs = 0;
+			sleep_period_mins = 0;
+			sleep_period_secs = 15;
+		}
+/*
+		if(minute()>0) {
+      sleep_period_hrs  = 0; //24-(hour()+1)+AWAKE_TIME_START_HRS;
+			Serial.println("a");
+      sleep_period_mins = 0; //60-minute();
+      sleep_period_secs = 15;
     }
     else {
       sleep_period_hrs  = 24-hour()+AWAKE_TIME_START_HRS;
-			Serial.println("d");
+			Serial.println("b");
       sleep_period_mins = 0;
-			Serial.println("e");
       sleep_period_secs = 0;
-			Serial.println("f");
     }
+*/
   }
   // Time is between 00:00 & 02:00
   else if (hour() < AWAKE_TIME_START_HRS) {
-    if(minute()>0) {
-			Serial.println("g");
+		if (minute() % 15 == 0) {
+			Serial.println("c");
+			sleep_period_hrs = 0;
+			sleep_period_mins = 1;
+			sleep_period_secs = 0;
+		}
+		else {
+			Serial.println("d");
+			sleep_period_hrs = 0;
+			sleep_period_mins = 0;
+			sleep_period_secs = 15;
+		}
+/*
+		if(minute()>0) {
+			Serial.println("c");
       sleep_period_hrs  = AWAKE_TIME_START_HRS - (hour()+1);
       sleep_period_mins = 60-minute();
 			sleep_period_secs = 0;
   	}
   	else {
-			Serial.println("h");
+			Serial.println("d");
 			sleep_period_hrs  = 0; //AWAKE_TIME_START_HRS - hour();
 			sleep_period_mins = 0;
 			sleep_period_secs = 10;
     }
+*/
   }
 
 	// Turn off peripherals
@@ -370,11 +394,12 @@ void sleepCheck () {//
  	Serial.printf("Sleep Period MINS = %i\n\r", sleep_period_mins);
  	Serial.printf("Sleep Period SECS = %i\n\r", sleep_period_secs);
 
+	delay(1000);
+
 	// Set RTC alarm wake up in (hours, minutes, seconds).
-	// Currently the code runs so that it hits the "h" loop and then goes to the "abc" loop
+	// Currently the code runs so that it hits the "d" loop and then goes to the "a" loop
 	alarm.setRtcTimer(sleep_period_hrs, sleep_period_mins, sleep_period_secs);// hour, min, sec
 
- 	delay(1000);
 
  	// Send Teensy to deep sleep
   who = Snooze.hibernate( config_teensy36 );
@@ -585,24 +610,24 @@ void loop() {
 
 	// start logging
 	loggingFun();
-/*
+
 		// print on serial monitor and save onboard acceleration to SD
 	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
-	dataFile_onboard.println("time [us]\tA_x\tA_y");
+	dataFile_onboard.println("time [us],A_x,A_y");
 	for (int ii = 0; ii < arraySize_onboard; ii++) {
 		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], yData[ii]);
-		dataFile_onboard.printf("%i\t%i\t\t%i\n", time_onboard[ii], xData[ii], yData[ii]);
+		dataFile_onboard.printf("%i,%i,%i\n", time_onboard[ii], xData[ii], yData[ii]);
 	}
 	dataFile_onboard.close();
 
 	// print on serial monitor and save external accel to SD
 	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
   Serial.println("ii\ttime [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
-	dataFile_external.println("time [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
+	dataFile_external.println("time [us], Accel_X, Accel_Y, Accel_Z, Gyro_X, Gyro_Y, Gyro_Z");
 	for (int ii = 0; ii < arraySize_external; ii++) {
 		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
-		dataFile_external.printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
+		dataFile_external.printf("%i,%f,%f,%f,%f,%f,%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 	}
 	dataFile_external.close();
 
@@ -612,7 +637,7 @@ void loop() {
 	//wind sketch
 	File dataFile_wind = SD.open(filename_w, FILE_WRITE);
 	Serial.println("Speed (MPH)\tKnots\tDirection");
-	dataFile_wind.println("Speed (MPH)\tKnots\tDirection");
+	dataFile_wind.println("Speed (MPH),Knots,Direction");
 	Serial.print(WindSpeed); Serial.print("\t\t"); Serial.print(getKnots(WindSpeed)); Serial.print("\t");
 	Serial.print(CalDirection);
 	dataFile_wind.print(WindSpeed); dataFile_wind.print("\t\t"); dataFile_wind.print(getKnots(WindSpeed)); dataFile_wind.print("\t");
@@ -657,7 +682,7 @@ void loop() {
 
 	dataFile_wind.close();
 
-*/
+
 	// save wind data to SD
 
 		// Serial.print(WindSpeed); Serial.print("\t\t");
