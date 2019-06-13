@@ -22,9 +22,9 @@ https://www.pjrc.com/teensy/tutorial.html
 | SDA     | 11     | 19 (L)       | MOSI0    |
 | CSAG    | 15     | 18 (R)       | CS0      |
 | SDOAG   | 12     | 20 (L)       | MISO0    |
-| Wind Speed |
+| **Wind Speed** |
 | black | 2 |
-| Wind Direction |
+| **Wind Direction** |
 | green | 20 |
 
 ## Libraries used
