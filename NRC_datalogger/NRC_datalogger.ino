@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "v2.1.6 - beta - Wake 1:00-7:00 Local Time";
+static char FirmwareVersion[] = "NRC datalogger - v0.1.1000";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -264,7 +264,7 @@ void loggingFun() {
 		}
 		//Wind Speed
 		if(WindSpeedTimer.check()) {
-			// convert to mp/h using the formula V=P(2.25/T)
+			// convert to mp/h using the formula V=P(2.25/T) T = wind_time
 			// V = P(2.25/3) = P * 0.75
 			WindSpeed = Rotations * 0.75;
 			// Serial.printf("Wind Speed = %i\n", WindSpeed);
@@ -547,7 +547,7 @@ void setup() {
 	delay(500);   // wait for serial
 	Serial.printf("NRC Logger - %s\r\n\n", FirmwareVersion);
 
-	/*digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
+	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 
 	Serial.printf("Use FONA? (y/n)\n\r");
@@ -558,7 +558,7 @@ void setup() {
 		Serial.println("Starting FONA chip...");
 	} else {
 		getUserTime();
-	}*/
+	}
 
 	wakeUp();	// Power on external modules
 }
@@ -595,7 +595,7 @@ void loop() {
 	// create files
 	sprintf(filename_on, "%02i%02i%02i%s.csv", month(), day(), hour(), "O");  // generate onboard sensor filename
 	sprintf(filename_ex, "%02i%02i%02i%s.csv", month(), day(), hour(), "E");  // generate external sensor filename
-	sprintf(filename_w, "%02i%02i%02i%s.csv", month(), day(), hour(), "W");	//generate anemometer filename
+	sprintf(filename_w, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());	//generate anemometer filename
 	// print file names on serial monitor
 	Serial.printf("File: %s\n\r", filename_on);
 	Serial.printf("File: %s\n\r", filename_ex);
@@ -623,8 +623,8 @@ void loop() {
 
 	// print on serial monitor and save external accel to SD
 	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
-  Serial.println("ii\ttime [us]\tAccel_X\tAccel_Y\tAccel_Z\tGyro_X\tGyro_Y\tGyro_Z");
-	dataFile_external.println("time [us], Accel_X, Accel_Y, Accel_Z, Gyro_X, Gyro_Y, Gyro_Z");
+  Serial.println("ii\ttime [us]\tAccel_X (m/s2)\tAccel_Y (m/s2)\tAccel_Z (m/s2)\tGyro_X (degrees/s)\tGyro_Y (m/s2)\tGyro_Z ");
+	dataFile_external.println("time [us], Accel_X (m/s2), Accel_Y (m/s2), Accel_Z (m/s2), Gyro_X (degrees/s), Gyro_Y (degrees/s), Gyro_Z (degrees/s)");
 	for (int ii = 0; ii < arraySize_external; ii++) {
 		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 		dataFile_external.printf("%i,%f,%f,%f,%f,%f,%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
