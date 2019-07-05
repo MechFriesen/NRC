@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "NRC datalogger - v0.1.1005";
+static char FirmwareVersion[] = "NRC datalogger edits - v0.1.1005";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
