@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "NRC datalogger - v0.1.1000";
+static char FirmwareVersion[] = "NRC datalogger - v0.1.1005";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -56,6 +56,8 @@ const int	PPS_PIN = 23; // 1PPS from SIM808 module
 SoftwareSerial fonaSS = SoftwareSerial(TX_PIN, RX_PIN);
 SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
+
+// lsm config
 Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1(LSM9DS1_XGCS, 0); //from example sketch
 
 // Timezone and Time change rules
@@ -487,9 +489,19 @@ void startFONA() {
 		Serial.printf("Couldn't find FONA\n\r");
     	useFONA = false;
 	} else {
+		int rssi = 0;
+		while (fona.getRSSI() < 5) {
+			Serial.printf("RSSI: %i\n", rssi);
+			// delay(50);
+		}
+		// delay(500);	// shitty hack
 		Serial.print(fona.enableNetworkTimeSync(true));
+		// if (!fona.enableNetworkTimeSync(true)) {
+		// 	Serial.println(F("Failed to enable"));
+		// }
+		// delay(500); // shitty hack
 		fona.getTime(timeBuf, 25);
-		parseTime(timeBuf);
+	  parseTime(timeBuf);
 	}
 
 }
@@ -531,7 +543,7 @@ void setup() {
 	char c;
 	bool digitalWake = false;
 
-	Serial.begin(128000);
+	Serial.begin(9600);
 
 	// configure pins
 	pinMode (CS, OUTPUT);
