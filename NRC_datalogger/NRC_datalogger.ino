@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "NRC datalogger edits - v0.1.1005";
+static char FirmwareVersion[] = "NRC datalogger edits - v0.1.3";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -103,7 +103,7 @@ ADC *adc = new ADC();
 ADC::Sync_result ADC_vals;
 
 // Global variables
-const uint16_t arraySize_onboard = 2048, arraySize_external = 2048;
+const uint16_t arraySize_onboard = 494, arraySize_external = 49;
 int VaneValue, Direction, CalDirection; //wind sketch variables
 uint16_t numTestSeqs = 0, sequenceNum = 1, wind_time = 5000, external_period = 200, dataCount = 0, dataCount_external = 0, xData[arraySize_onboard], yData[arraySize_onboard];
 uint32_t logDuration, time_onboard[arraySize_onboard], time_external[arraySize_external];	// duration of logging in seconds, time of sample [us]
@@ -142,7 +142,7 @@ void sessionSetup() {
 
 // Open SD file system
 void initializeSD() {
-	// Serial.print(F("Initializing SD card..."));
+	Serial.print(F("Initializing SD card..."));
 	SdFile::dateTimeCallback(SD_dateTime);	// enable the SD file system to retrieve the time
 	File dummyFile;
 	if (!(dummyFile = SD.open("checkSD.txt", FILE_WRITE))) {
@@ -174,6 +174,7 @@ float readBattVolt() {
 	voltage = avg*0.002739 - 0.0493;		// empirical conversion equation (assumes 12-bit)
 	return voltage;
 }
+
 
 void setupADC() {
 	uint16_t sample_rate = 50;	// samples/second
@@ -266,9 +267,9 @@ void loggingFun() {
 		}
 		//Wind Speed
 		if(WindSpeedTimer.check()) {
-			// convert to mp/h using the formula V=P(2.25/T) T = wind_time
-			// V = P(2.25/3) = P * 0.75
-			WindSpeed = Rotations * 0.75;
+			// convert to mp/h using the formula V=P(2.25/T) T = wind_time (in seconds)
+			// V = P(2.25/5) = P * 0.45
+			WindSpeed = Rotations * 0.45;
 			// Serial.printf("Wind Speed = %i\n", WindSpeed);
 			Rotations = 0; //Reset count for next sample
 			adcTrigger.priority(0);
@@ -303,6 +304,7 @@ void setupSensor() {
 		//lsm.setupGyro(lsm.LSM9DS1_GYROSCALE_2000DPS);
 }
 
+
 // Checks if the logger should sleep and if so it goes to sleep
 void sleepCheck () {//
   int who; // For snooze library
@@ -332,28 +334,15 @@ void sleepCheck () {//
 			sleep_period_mins = 0;
 			sleep_period_secs = 15;
 		}
-/*
-		if(minute()>0) {
-      sleep_period_hrs  = 0; //24-(hour()+1)+AWAKE_TIME_START_HRS;
-			Serial.println("a");
-      sleep_period_mins = 0; //60-minute();
-      sleep_period_secs = 15;
-    }
-    else {
-      sleep_period_hrs  = 24-hour()+AWAKE_TIME_START_HRS;
-			Serial.println("b");
-      sleep_period_mins = 0;
-      sleep_period_secs = 0;
-    }
-*/
+
   }
   // Time is between 00:00 & 02:00
   else if (hour() < AWAKE_TIME_START_HRS) {
 		if (minute() % 15 == 0) {
 			Serial.println("c");
 			sleep_period_hrs = 0;
-			sleep_period_mins = 1;
-			sleep_period_secs = 0;
+			sleep_period_mins = 0;
+			sleep_period_secs = 10;
 		}
 		else {
 			Serial.println("d");
@@ -361,32 +350,18 @@ void sleepCheck () {//
 			sleep_period_mins = 0;
 			sleep_period_secs = 15;
 		}
-/*
-		if(minute()>0) {
-			Serial.println("c");
-      sleep_period_hrs  = AWAKE_TIME_START_HRS - (hour()+1);
-      sleep_period_mins = 60-minute();
-			sleep_period_secs = 0;
-  	}
-  	else {
-			Serial.println("d");
-			sleep_period_hrs  = 0; //AWAKE_TIME_START_HRS - hour();
-			sleep_period_mins = 0;
-			sleep_period_secs = 10;
-    }
-*/
   }
 
 	// Turn off peripherals
 	Serial.println("Turning peripherals off");
 	digitalWrite (EN_SENSE, LOW);	// Power off main board sensors
-	if (useFONA) {
+	// if (useFONA) {
 		digitalWrite (NOT_C_ON, LOW);		// Toggle FONA power
 		delay(1000);
 		digitalWrite (NOT_C_ON, HIGH);
 		delay(2500);
  		digitalWrite (EN_DATA, LOW);	// turn off fona power supply
-	}
+	// }
 
 	// Logging sleep period
  	Serial.println("OK. Going to sleep now...");
@@ -423,7 +398,8 @@ void wakeUp() {
 	digitalWrite (CS, HIGH);				// chip select for moon ADC SPI off
 
 	// Get time
-	if (useFONA) startFONA();
+	// if (useFONA)
+	startFONA();
 
 	// initialize SPI:
 	SPI.begin();
@@ -487,7 +463,7 @@ void startFONA() {
 	fonaSerial->begin(4800);
 	if (! fona.begin(*fonaSerial)) {
 		Serial.printf("Couldn't find FONA\n\r");
-    	useFONA = false;
+    	// useFONA = false;
 	} else {
 		int rssi = 0;
 		while (fona.getRSSI() < 5) {
@@ -562,15 +538,15 @@ void setup() {
 	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 
-	Serial.printf("Use FONA? (y/n)\n\r");
-	while (!Serial.available()) {}
-	c = Serial.read();
-	if ((c == 'y') || c == 'Y') {
-		useFONA = true;
-		Serial.println("Starting FONA chip...");
-	} else {
-		getUserTime();
-	}
+	// Serial.printf("Use FONA? (y/n)\n\r");
+	// while (!Serial.available()) {}
+	// c = Serial.read();
+	// if ((c == 'y') || c == 'Y') {
+	// 	useFONA = true;
+	// 	Serial.println("Starting FONA chip...");
+	// } else {
+	// 	getUserTime();
+	// }
 
 	wakeUp();	// Power on external modules
 }
@@ -613,13 +589,6 @@ void loop() {
 	Serial.printf("File: %s\n\r", filename_ex);
 	Serial.printf("File: %s\n\r", filename_w);
 
-	//Serial.printf("Channel: %i\n\r", channel[sequence_channel_num]);
-	//Serial.printf("Duration: %i minutes\n\n\r", logDuration[sequence_channel_num]/60);
-
-	// print headers (TODO: Update for NRC project)
-	//Serial.printf("Status, Time (s), %s [LSB], PPS received\n\r", "Acceleraton");
-	//dataFile.printf("Microseconds, Seconds, %s [LSB]\n\r", "Acceleraton");
-
 	// start logging
 	loggingFun();
 
@@ -631,6 +600,7 @@ void loop() {
 		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], yData[ii]);
 		dataFile_onboard.printf("%i,%i,%i\n", time_onboard[ii], xData[ii], yData[ii]);
 	}
+		// close down logging
 	dataFile_onboard.close();
 
 	// print on serial monitor and save external accel to SD
@@ -641,10 +611,7 @@ void loop() {
 		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 		dataFile_external.printf("%i,%f,%f,%f,%f,%f,%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 	}
-	dataFile_external.close();
-
-	// close down logging
-	// dataFile.close();   // close file
+	dataFile_external.close(); // close file
 
 	//wind sketch
 	File dataFile_wind = SD.open(filename_w, FILE_WRITE);
@@ -694,15 +661,6 @@ void loop() {
 
 	dataFile_wind.close();
 
-
-	// save wind data to SD
-
-		// Serial.print(WindSpeed); Serial.print("\t\t");
-		// Serial.print(getKnots(WindSpeed)); Serial.print("\t");
-		// Serial.print(CalDirection);
-		// getHeading(CalDirection); Serial.print("\n");
-
-
 	Serial.printf("Finished logging to %s, %s and %s\n\n\r", filename_on, filename_ex, filename_w);
 
 	Serial.printf("Finished logging sequence %i of %i\n\n\r", sequenceNum, numTestSeqs);
@@ -732,10 +690,7 @@ void adc_data_retrieve(void) {
 // Anemomter functions
 	// interrupt calls to increment the rotation count
 void isr_rotation() {
-	//if ((millis() - ContactBounceTime) > 15 ) { // debounce the switch contact.
 	Rotations++;
-	//ContactBounceTime = millis();
-	//}
 }
 
 	// Convert MPH to Knots
@@ -751,43 +706,3 @@ void getWindDirection() {
 	CalDirection = Direction + VaneOffset;
 	// Serial.printf("CalDirection = %i\n", CalDirection);
 }
-
-	//Converts compass direction to heading
-// void getHeading(int direction) {
-// 	if(direction < 22) {
-// 		Serial.print(" N");
-// 		dataFile_wind.printf(" N");
-// 		}
-// 	else if (direction < 67) {
-// 		Serial.print(" NE");
-// 		dataFile_wind.printf(" NE");
-// 		}
-// 	else if (direction < 112) {
-// 		Serial.print(" E");
-// 		dataFile_wind.printf(" E");
-// 		}
-// 	else if (direction < 157) {
-// 		Serial.print(" SE");
-// 		dataFile_wind.printf(" SE");
-// 		}
-// 	else if (direction < 212) {
-// 		Serial.print(" S");
-// 		dataFile_wind.printf(" S");
-// 		}
-// 	else if (direction < 247) {
-// 		Serial.print(" SW");
-// 		dataFile_wind.printf(" SW");
-// 		}
-// 	else if (direction < 292) {
-// 		Serial.print(" W");
-// 		dataFile_wind.printf(" W");
-// 		}
-// 	else if (direction < 337) {
-// 		Serial.print(" NW");
-// 		dataFile_wind.printf(" NW");
-// 		}
-// 	else {
-// 		Serial.print(" N");
-// 		dataFile_wind.printf(" N");
-// 		}
-// }
