@@ -583,7 +583,7 @@ void loop() {
 	// create files
 	sprintf(filename_on, "%02i%02i%02i%s.csv", month(), day(), hour(), "O");  // generate onboard sensor filename
 	sprintf(filename_ex, "%02i%02i%02i%s.csv", month(), day(), hour(), "E");  // generate external sensor filename
-	sprintf(filename_w, "%02i%02i%02i%02i.csv", month(), day(), hour(), minute());	//generate anemometer filename
+	sprintf(filename_w, "%02i%02i%02i%s.csv", month(), day(), hour(), "W");	//generate anemometer filename
 	// print file names on serial monitor
 	Serial.printf("File: %s\n\r", filename_on);
 	Serial.printf("File: %s\n\r", filename_ex);
@@ -592,10 +592,12 @@ void loop() {
 	// start logging
 	loggingFun();
 
+
 		// print on serial monitor and save onboard acceleration to SD
 	File dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
 	dataFile_onboard.println("time [us],A_x,A_y");
+
 	for (int ii = 0; ii < arraySize_onboard; ii++) {
 		Serial.printf("%i\t%i\t\t%i\t%i\n", ii, time_onboard[ii], xData[ii], yData[ii]);
 		dataFile_onboard.printf("%i,%i,%i\n", time_onboard[ii], xData[ii], yData[ii]);
@@ -607,6 +609,7 @@ void loop() {
 	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
   Serial.println("ii\ttime [us]\tAccel_X (m/s2)\tAccel_Y (m/s2)\tAccel_Z (m/s2)\tGyro_X (degrees/s)\tGyro_Y (m/s2)\tGyro_Z ");
 	dataFile_external.println("time [us], Accel_X (m/s2), Accel_Y (m/s2), Accel_Z (m/s2), Gyro_X (degrees/s), Gyro_Y (degrees/s), Gyro_Z (degrees/s)");
+
 	for (int ii = 0; ii < arraySize_external; ii++) {
 		Serial.printf("%i\t%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ii, time_external[ii],  array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
 		dataFile_external.printf("%i,%f,%f,%f,%f,%f,%f\n", time_external[ii], array_ax[ii], array_ay[ii], array_az[ii], array_gx[ii], array_gy[ii], array_gz[ii]);
@@ -617,8 +620,11 @@ void loop() {
 	File dataFile_wind = SD.open(filename_w, FILE_WRITE);
 	Serial.println("Speed (MPH)\tKnots\tDirection");
 	dataFile_wind.println("Speed (MPH),Knots,Direction");
+
+	Serial.printf("%02i%02i%02i%02i%02i", month(), day(), hour(), minute(), second()); Serial.print("\t\t");
 	Serial.print(WindSpeed); Serial.print("\t\t"); Serial.print(getKnots(WindSpeed)); Serial.print("\t");
 	Serial.print(CalDirection);
+	dataFile_wind.printf("%02i%02i%02i%02i%02i", month(), day(), hour(), minute(), second()); dataFile_wind.print("\t\t");
 	dataFile_wind.print(WindSpeed); dataFile_wind.print("\t\t"); dataFile_wind.print(getKnots(WindSpeed)); dataFile_wind.print("\t");
 	dataFile_wind.printf("%i\t", CalDirection);
 
