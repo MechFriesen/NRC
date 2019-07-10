@@ -262,6 +262,7 @@ void loggingFun() {
 		//Wind Direction
 		if (WindDirectionTimer.check()) {
 			getWindDirection();
+			// add the adc trigger so analogRead from wind data doesn't affect adc
 			adcTrigger.priority(0);
 			adc->startSynchronizedContinuous(A_x, A_y);		// continuously samples both input pin simultaneously
 		}
@@ -279,7 +280,7 @@ void loggingFun() {
 			//stop logging
 		if ((now() - logStartTime) >= 10)
 			stop_logging = true;
-		else if (dataCount > arraySize_external)
+		else if (dataCount > arraySize_onboard)
 			stop_logging = true;
 	}
 	adcTrigger.end();	// stop retrieving values
@@ -314,7 +315,7 @@ void sleepCheck () {//
   if ((hour() >= AWAKE_TIME_START_HRS) && (hour()< AWAKE_TIME_END_HRS))
     return;
 		//Serial.println("running");
-		Serial.printf("%i\t%i\t%i\t%i\n", AWAKE_TIME_START_HRS, AWAKE_TIME_END_HRS, hour(), minute());// 1 7
+		// Serial.printf("%i\t%i\t%i\t%i\n", AWAKE_TIME_START_HRS, AWAKE_TIME_END_HRS, hour(), minute());// 1 7
 
 		// Check mode switch pin state
 	  // if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
@@ -323,13 +324,13 @@ void sleepCheck () {//
   // Time is between 04:00 & 24:00
   if((hour() >= AWAKE_TIME_END_HRS)) {
 		if (minute() % 15 == 0) {
-			Serial.println("a");
+			// Serial.println("a");
 			sleep_period_hrs = 0;
 			sleep_period_mins = 1;
 			sleep_period_secs = 0;
 		}
 		else {
-			Serial.println("b");
+			// Serial.println("b");
 			sleep_period_hrs = 0;
 			sleep_period_mins = 0;
 			sleep_period_secs = 15;
@@ -339,13 +340,13 @@ void sleepCheck () {//
   // Time is between 00:00 & 02:00
   else if (hour() < AWAKE_TIME_START_HRS) {
 		if (minute() % 15 == 0) {
-			Serial.println("c");
+			// Serial.println("c");
 			sleep_period_hrs = 0;
-			sleep_period_mins = 0;
-			sleep_period_secs = 10;
+			sleep_period_mins = 1;
+			sleep_period_secs = 0;
 		}
 		else {
-			Serial.println("d");
+			// Serial.println("d");
 			sleep_period_hrs = 0;
 			sleep_period_mins = 0;
 			sleep_period_secs = 15;
