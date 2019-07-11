@@ -595,10 +595,7 @@ void loop() {
 
 
 		// print on serial monitor and save onboard acceleration to SD
-	File dataFile_onboard;
-	dataFile_onboard.println("time [us],A_x,A_y");
-
-	dataFile_onboard = SD.open(filename_on, FILE_WRITE);
+	File	dataFile_onboard = SD.open(filename_on, FILE_WRITE);
 	Serial.println("ii\ttime [us]\tA_x\tA_y");
 
 	for (int ii = 0; ii < arraySize_onboard; ii++) {
@@ -609,10 +606,7 @@ void loop() {
 	dataFile_onboard.close();
 
 	// print on serial monitor and save external accel to SD
-	File dataFile_external;
-	dataFile_external.println("time [us], Accel_X (m/s2), Accel_Y (m/s2), Accel_Z (m/s2), Gyro_X (degrees/s), Gyro_Y (degrees/s), Gyro_Z (degrees/s)");
-
-	dataFile_external = SD.open(filename_ex, FILE_WRITE);
+	File dataFile_external = SD.open(filename_ex, FILE_WRITE);
   Serial.println("ii\ttime [us]\tAccel_X (m/s2)\tAccel_Y (m/s2)\tAccel_Z (m/s2)\tGyro_X (degrees/s)\tGyro_Y (m/s2)\tGyro_Z ");
 
 	for (int ii = 0; ii < arraySize_external; ii++) {
@@ -622,10 +616,7 @@ void loop() {
 	dataFile_external.close(); // close file
 
 	//wind sketch
-	File dataFile_wind;
-	dataFile_wind.println("Time, Speed (MPH),Knots,Direction");
-
-	dataFile_wind = SD.open(filename_w, FILE_WRITE);
+	File dataFile_wind = SD.open(filename_w, FILE_WRITE);
 	Serial.println("Time\tSpeed (MPH)\tKnots\tDirection");
 
 	Serial.printf("%02i%02i%02i%02i%02i", month(), day(), hour(), minute(), second()); Serial.print("\t\t");
