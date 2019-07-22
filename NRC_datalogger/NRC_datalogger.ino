@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "NRC datalogger edits - v0.1.3";
+static char FirmwareVersion[] = "NRC datalogger edits - v0.1.4";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -358,7 +358,7 @@ void sleepCheck () {//
 	// Turn off peripherals
 	Serial.println("Turning peripherals off");
 	digitalWrite (EN_SENSE, LOW);	// Power off main board sensors
-	// if (useFONA) {
+	if (useFONA) {
 		digitalWrite (NOT_C_ON, LOW);		// Toggle FONA power
 		delay(1000);
 		digitalWrite (NOT_C_ON, HIGH);
@@ -401,8 +401,7 @@ void wakeUp() {
 	digitalWrite (CS, HIGH);				// chip select for moon ADC SPI off
 
 	// Get time
-	// if (useFONA)
-	startFONA();
+	if (useFONA)	startFONA();
 
 	// initialize SPI:
 	SPI.begin();
@@ -466,7 +465,7 @@ void startFONA() {
 	fonaSerial->begin(4800);
 	if (! fona.begin(*fonaSerial)) {
 		Serial.printf("Couldn't find FONA\n\r");
-    	// useFONA = false;
+    	useFONA = false;
 	} else {
 		int rssi = 0;
 		while (fona.getRSSI() < 5) {
@@ -541,15 +540,15 @@ void setup() {
 	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 
-	// Serial.printf("Use FONA? (y/n)\n\r");
-	// while (!Serial.available()) {}
-	// c = Serial.read();
-	// if ((c == 'y') || c == 'Y') {
-	// 	useFONA = true;
-	// 	Serial.println("Starting FONA chip...");
-	// } else {
-	// 	getUserTime();
-	// }
+	Serial.printf("Use FONA? (y/n)\n\r");
+	while (!Serial.available()) {}
+	c = Serial.read();
+	if ((c == 'y') || c == 'Y') {
+		useFONA = true;
+		Serial.println("Starting FONA chip...");
+	} else {
+		getUserTime();
+	}
 
 	wakeUp();	// Power on external modules
 }
