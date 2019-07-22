@@ -320,7 +320,9 @@ void sleepCheck () {//
 		// Check mode switch pin state
 	  // if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
 		// Serial.println("off");
-
+// while (true) {
+// 	sleep
+// }
   // Time is between 04:00 & 24:00
   if((hour() >= AWAKE_TIME_END_HRS)) {
 		if (minute() % 15 == 0) {
