@@ -113,6 +113,61 @@ bool ledState = false;
 SDClass SD;
 
 // Functions
+// Displays Date & Time
+void digitalClockDisplay() {
+  Serial.printf("%2i:%02i:%02i %s %i, %i %s\n\r", hour(), minute(), second(), monthStr(month()), day(), year(), tcr -> abbrev);
+}
+
+// Turn on FONA and get Network time
+void startFONA() {
+	char timeBuf[21];	// holds time string returned from FONA
+	// Power up sequence
+	digitalWrite (EN_DATA, HIGH);	// enable fona power supply
+	delay(100);	// power supply settling
+	digitalWrite (NOT_C_ON, LOW);	// bring fona power key pin low
+	delay(1100);			// power key must be low >1s
+	digitalWrite (NOT_C_ON, HIGH);	// return fona power key pin
+
+	fonaSerial->begin(4800);
+	if (! fona.begin(*fonaSerial)) {
+		Serial.printf("Couldn't find FONA\n\r");
+    	useFONA = false;
+	} else {
+		int rssi = 0;
+		while (fona.getRSSI() < 5) {
+			Serial.printf("RSSI: %i\n", rssi);
+			// delay(50);
+		}
+		// delay(500);	// shitty hack
+		Serial.print(fona.enableNetworkTimeSync(true));
+		// if (!fona.enableNetworkTimeSync(true)) {
+		// 	Serial.println(F("Failed to enable"));
+		// }
+		// delay(500); // shitty hack
+		fona.getTime(timeBuf, 25);
+	  parseTime(timeBuf);
+	}
+
+}
+
+// Turns on peripheral power supplies/modules
+void wakeUp() {
+
+	Serial.printf("Battery Voltage: %.2f V\n\r", readBattVolt());	// Measure the battery voltage
+
+	// Turn peripherals back on
+	digitalWrite (EN_SENSE, HIGH);	// Power on main board sensors
+	digitalWrite (CS, HIGH);				// chip select for moon ADC SPI off
+
+	// Get time
+	//if (useFONA)
+	startFONA();
+
+	// initialize SPI:
+	SPI.begin();
+	delay(100); //give power supplies and ADC time to wake up
+}
+
 // Get user input for channels to log and duration
 void sessionSetup() {
 
@@ -141,6 +196,11 @@ void sessionSetup() {
 	sessionStarted = true;
 }
 
+void SD_dateTime(uint16_t* date, uint16_t* time) {	// function that SdFat calls to get time
+  *date = FAT_DATE(year(), month(), day());		// return date using FAT_DATE macro to format fields
+  *time = FAT_TIME(hour(), minute(), second());	// return time using FAT_TIME macro to format fields
+}
+
 // Open SD file system
 void initializeSD() {
 	Serial.print(F("Initializing SD card..."));
@@ -158,11 +218,6 @@ void initializeSD() {
 	}
 	else
 		SD.remove("checkSD.txt");
-}
-
-void SD_dateTime(uint16_t* date, uint16_t* time) {	// function that SdFat calls to get time
-  *date = FAT_DATE(year(), month(), day());		// return date using FAT_DATE macro to format fields
-  *time = FAT_TIME(hour(), minute(), second());	// return time using FAT_TIME macro to format fields
 }
 
 // For accurate voltage measurements the battery should be in a quasi-OC state (low current draw)
@@ -300,7 +355,7 @@ void sleepCheck () {//
 	// Turn off peripherals
 	Serial.println("Turning peripherals off");
 	digitalWrite (EN_SENSE, LOW);	// Power off main board sensors
-	if (useFONA) {
+	//if (useFONA) {
 		digitalWrite (NOT_C_ON, LOW);		// Toggle FONA power
 		delay(1000);
 		digitalWrite (NOT_C_ON, HIGH);
@@ -331,25 +386,6 @@ void sleepCheck () {//
   else if (who == MODE)  // switch wakeup value
   	Serial.println("Woke up through mode switch");
   wakeUp();	// go through additional wakeup processes
-}
-}
-
-// Turns on peripheral power supplies/modules
-void wakeUp() {
-
-	Serial.printf("Battery Voltage: %.2f V\n\r", readBattVolt());	// Measure the battery voltage
-
-	// Turn peripherals back on
-	digitalWrite (EN_SENSE, HIGH);	// Power on main board sensors
-	digitalWrite (CS, HIGH);				// chip select for moon ADC SPI off
-
-	// Get time
-	if (useFONA)
-	startFONA();
-
-	// initialize SPI:
-	SPI.begin();
-	delay(100); //give power supplies and ADC time to wake up
 }
 
 // Enables wake from mode switch if hardware supports it. Returns true if enabled.
@@ -396,37 +432,6 @@ void getUserTime() {
 	digitalClockDisplay();	// print it out for the user to see
 }
 
-// Turn on FONA and get Network time
-void startFONA() {
-	char timeBuf[21];	// holds time string returned from FONA
-	// Power up sequence
-	digitalWrite (EN_DATA, HIGH);	// enable fona power supply
-	delay(100);	// power supply settling
-	digitalWrite (NOT_C_ON, LOW);	// bring fona power key pin low
-	delay(1100);			// power key must be low >1s
-	digitalWrite (NOT_C_ON, HIGH);	// return fona power key pin
-
-	fonaSerial->begin(4800);
-	if (! fona.begin(*fonaSerial)) {
-		Serial.printf("Couldn't find FONA\n\r");
-    	useFONA = false;
-	} else {
-		int rssi = 0;
-		while (fona.getRSSI() < 5) {
-			Serial.printf("RSSI: %i\n", rssi);
-			// delay(50);
-		}
-		// delay(500);	// shitty hack
-		Serial.print(fona.enableNetworkTimeSync(true));
-		// if (!fona.enableNetworkTimeSync(true)) {
-		// 	Serial.println(F("Failed to enable"));
-		// }
-		// delay(500); // shitty hack
-		fona.getTime(timeBuf, 25);
-	  parseTime(timeBuf);
-	}
-
-}
 
 // convert user time input or network time into Teensy time struct
 void parseTime(char *TimeStr) {
@@ -455,11 +460,6 @@ void parseTime(char *TimeStr) {
 	setTime(tm.Hour, tm.Minute, tm.Second, tm.Day, tm.Month, tm.Year);
 	Teensy3Clock.set(makeTime(tm));
 // 	digitalClockDisplay();
-}
-
-// Displays Date & Time
-void digitalClockDisplay() {
-  Serial.printf("%2i:%02i:%02i %s %i, %i %s\n\r", hour(), minute(), second(), monthStr(month()), day(), year(), tcr -> abbrev);
 }
 
 // Core logging loop
@@ -577,15 +577,15 @@ void setup() {
 	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 
-	Serial.printf("Use FONA? (y/n)\n\r");
-	while (!Serial.available()) {}
-	c = Serial.read();
-	if ((c == 'y') || c == 'Y') {
-		useFONA = true;
-		Serial.println("Starting FONA chip...");
-	} else {
-		getUserTime();
-	}
+	// Serial.printf("Use FONA? (y/n)\n\r");
+	// while (!Serial.available()) {}
+	// c = Serial.read();
+	// if ((c == 'y') || c == 'Y') {
+	// 	useFONA = true;
+	// 	Serial.println("Starting FONA chip...");
+	// } else {
+	// 	getUserTime();
+	// }
 
 	wakeUp();	// Power on external modules
 }
