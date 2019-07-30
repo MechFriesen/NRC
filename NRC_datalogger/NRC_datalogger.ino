@@ -38,7 +38,7 @@
 #define VaneOffset 0;  // define the anemomter offset from magnetic north
 
 // Firmware version string
-static char FirmwareVersion[] = "NRC datalogger edits - v0.1.5";
+static char FirmwareVersion[] = "NRC datalogger edits - v0.1.7";
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -160,8 +160,9 @@ void wakeUp() {
 	digitalWrite (CS, HIGH);				// chip select for moon ADC SPI off
 
 	// Get time
-	//if (useFONA)
-	startFONA();
+  if (useFONA){
+    startFONA();
+}
 
 	// initialize SPI:
 	SPI.begin();
@@ -355,13 +356,13 @@ void sleepCheck () {//
 	// Turn off peripherals
 	Serial.println("Turning peripherals off");
 	digitalWrite (EN_SENSE, LOW);	// Power off main board sensors
-	//if (useFONA) {
+	if (useFONA) {
 		digitalWrite (NOT_C_ON, LOW);		// Toggle FONA power
 		delay(1000);
 		digitalWrite (NOT_C_ON, HIGH);
 		delay(2500);
  		digitalWrite (EN_DATA, LOW);	// turn off fona power supply
-	// }
+	}
 
 	// Logging sleep period
  	Serial.println("OK. Going to sleep now...");
@@ -577,17 +578,22 @@ void setup() {
 	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 
-	// Serial.printf("Use FONA? (y/n)\n\r");
-	// while (!Serial.available()) {}
-	// c = Serial.read();
-	// if ((c == 'y') || c == 'Y') {
-	// 	useFONA = true;
-	// 	Serial.println("Starting FONA chip...");
-	// } else {
-	// 	getUserTime();
-	// }
+  // get user input for session parameters
+	if (!sessionStarted) {
+    sessionSetup();
+	}
 
-	wakeUp();	// Power on external modules
+	Serial.printf("Use FONA? (y/n)\n\r");
+	while (!Serial.available()) {}
+	c = Serial.read();
+	if ((c == 'y') || c == 'Y') {
+		useFONA = true;
+		Serial.println("Starting FONA chip...");
+	} else {
+		getUserTime();
+	}
+
+  wakeUp();	// Power on external modules
 }
 
 void loop() {
@@ -602,8 +608,7 @@ void loop() {
 
 	initializeSD();
 
-	// get user input for session parameters
-	// if (!sessionStarted) sessionSetup();
+
 
 	// Display test parameters
 	Serial.println("\nStarting Session");
