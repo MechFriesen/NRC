@@ -405,7 +405,7 @@ void setup() {
 	delay(500);   // wait for serial
 	Serial.printf("NRC Logger - %s\r\n\n", FirmwareVersion);
 
-	/*digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
+	digitalWake = digitalWakeEnable();	// enable wake from Mode switch if compatible with hardware
 	Serial.printf("Mode Switch Wakeups: %s\n\r", digitalWake ? "Yes" : "No");
 	
 	Serial.printf("Use FONA? (y/n)\n\r");
@@ -416,23 +416,17 @@ void setup() {
 		Serial.println("Starting FONA chip...");
 	} else {
 		getUserTime();
-	}*/
+	}
 	
 	wakeUp();	// Power on external modules
 }
 
 void loop() {
-	char filename[20];
-
-	// check if this test is part of a set
-	if ((sequenceNum > numTestSeqs) && !infiniteLog ) {
-		sessionStarted = false;
-	}
-	
+	char filename[20];	
 	initializeSD();
 
 	// get user input for session parameters
-	//if (!sessionStarted) sessionSetup();
+	if (!sessionStarted) sessionSetup();
 
 	// Display test parameters
 	Serial.println("\nStarting Session");
