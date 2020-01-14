@@ -31,7 +31,6 @@ https://www.pjrc.com/teensy/tutorial.html
 * Hologram backend https://github.com/benstr/hologram-SIMCOM 
 * GPS for timestamps https://github.com/adafruit/Adafruit_FONA
   * please disable the verbose output (comment out line 31 in /libraries/Adafruit_FONA/includes/FONAConfig.h) prior to compiling binary for deployment
-* Circular array buffer https://github.com/tonton81/Circular_Buffer
 
 ## Sensor Specifications and conversion equations
 
