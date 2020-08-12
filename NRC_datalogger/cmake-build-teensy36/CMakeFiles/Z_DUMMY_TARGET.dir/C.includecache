@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/Dirk/.platformio/packages/framework-arduinoteensy/cores/teensy3/kinetis.h
+stdint.h
+-
+
+/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include/stdint-gcc.h
+
+/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include/stdint.h
+stdint-gcc.h
+/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include/stdint-gcc.h
+
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/KinetisSDHC.c
+kinetis.h
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/kinetis.h
+

@@ -1,0 +1,5 @@
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/CMakeFiles/rebuild_cache.dir
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/CMakeFiles/edit_cache.dir
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/CMakeFiles/Z_DUMMY_TARGET.dir
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/CMakeFiles/Debug.dir
+/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/CMakeFiles/Production.dir

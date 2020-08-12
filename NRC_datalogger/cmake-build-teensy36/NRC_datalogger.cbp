@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="NRC_datalogger"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Z_DUMMY_TARGET">
+				<Option output="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Z_DUMMY_TARGET" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/include"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SoftwareSerial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Snooze/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Metro"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ADC"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Time"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SPI"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/cores/teensy3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/AccelStepper/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_NeoPixel"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_STMPE610"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_VS1053"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_nRF8001"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_nRF8001/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/AltSoftSerial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Artnet"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Audio"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Audio/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Bounce"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Bounce2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/CapacitiveSensor"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/CryptoAccel/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DS1307RTC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DmxSimple"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DogLcd"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EEPROM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EasyTransfer"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EasyTransferI2C"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Encoder"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Encoder/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Entropy"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Ethernet/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FNET/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FastCRC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FastLED"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexCAN"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexCAN_T4"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexiTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqCount"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqMeasure"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqMeasureMulti"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FrequencyTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ILI9341_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ILI9488_t3/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/IRremote"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Keypad/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LedControl/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LedDisplay"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LiquidCrystal/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LiquidCrystalFast"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LowPower"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MFRC522/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MIDI/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MsTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NXPMotionSense"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NXPMotionSense/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NativeEthernet/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OSC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OctoWS2811"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OneWire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PS2Keyboard"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PS2Keyboard/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PWMServo"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Ping"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PulsePosition"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/QuadEncoder"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/RA8875"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/RadioHead"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ResponsiveAnalogRead/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SD"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SD/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SPIFlash"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ST7735_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SerialFlash"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Servo"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ShiftPWM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SoftPWM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TFT_ILI9163C"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Talkie"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TeensyThreads"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimeAlarms"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimerOne"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimerThree"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TinyGPS"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Tlc5940"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TouchScreen"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/USBHost_t36"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/USBHost_t36/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/UTFT"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/VirtualWire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/WS2812Serial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Wire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Wire/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/XBee"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/XPT2046_Touchscreen"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/i2c_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ks0108"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ssd1351"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/x10"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include/c++/5.4.1"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include/c++/5.4.1/arm-none-eabi"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include-fixed"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include"/>
+					<Add directory="/Users/Dirk/.platformio/packages/tool-unity"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/11.0.3/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 Z_DUMMY_TARGET"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Z_DUMMY_TARGET/fast">
+				<Option output="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Z_DUMMY_TARGET" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/include"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SoftwareSerial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Snooze/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Metro"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ADC"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Time"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SPI"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer"/>
+					<Add directory="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/cores/teensy3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/AccelStepper/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_NeoPixel"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_STMPE610"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_VS1053"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_nRF8001"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_nRF8001/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/AltSoftSerial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Artnet"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Audio"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Audio/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Bounce"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Bounce2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/CapacitiveSensor"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/CryptoAccel/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DS1307RTC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DmxSimple"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/DogLcd"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EEPROM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EasyTransfer"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/EasyTransferI2C"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Encoder"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Encoder/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Entropy"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Ethernet/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FNET/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FastCRC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FastLED"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexCAN"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexCAN_T4"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FlexiTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqCount"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqMeasure"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FreqMeasureMulti"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/FrequencyTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ILI9341_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ILI9488_t3/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/IRremote"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Keypad/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LedControl/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LedDisplay"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LiquidCrystal/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LiquidCrystalFast"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/LowPower"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MFRC522/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MIDI/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/MsTimer2"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NXPMotionSense"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NXPMotionSense/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/NativeEthernet/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OSC"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OctoWS2811"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/OneWire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PS2Keyboard"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PS2Keyboard/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PWMServo"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Ping"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/PulsePosition"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/QuadEncoder"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/RA8875"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/RadioHead"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ResponsiveAnalogRead/src"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SD"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SD/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SPIFlash"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ST7735_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SerialFlash"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Servo"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ShiftPWM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/SoftPWM"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TFT_ILI9163C"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Talkie"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TeensyThreads"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimeAlarms"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimerOne"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TimerThree"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TinyGPS"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Tlc5940"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/TouchScreen"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/USBHost_t36"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/USBHost_t36/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/UTFT"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/VirtualWire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/WS2812Serial"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Wire"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/Wire/utility"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/XBee"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/XPT2046_Touchscreen"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/i2c_t3"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ks0108"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/ssd1351"/>
+					<Add directory="/Users/Dirk/.platformio/packages/framework-arduinoteensy/libraries/x10"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include/c++/5.4.1"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include/c++/5.4.1/arm-none-eabi"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/5.4.1/include-fixed"/>
+					<Add directory="/Users/Dirk/.platformio/packages/toolchain-gccarmnoneeabi/arm-none-eabi/include"/>
+					<Add directory="/Users/Dirk/.platformio/packages/tool-unity"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/11.0.3/include"/>
+					<Add directory="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 Z_DUMMY_TARGET/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Debug">
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 Debug"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Production">
+				<Option working_dir="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 Production"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/cmake-build-teensy36/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/.DS_Store">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/.git">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/.github/ISSUE_TEMPLATE.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/.github/PULL_REQUEST_TEMPLATE.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/.gitignore">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/.travis.yml">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/Adafruit_FONA.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/Adafruit_FONA.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/README.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONA3G_setbaud/.esp8266.test.skip">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONA3G_setbaud/FONA3G_setbaud.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONA_SMS_Response/FONA_SMS_Response.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONAtest/.esp8266.test.skip">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONAtest/FONAtest.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONAtest_KEY_mod.zip">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/FONAtest_KEY_mod/FONAtest_KEY_mod.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/GPS/.esp8266.test.skip">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/GPS/GPS.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/IncomingCall/.esp8266.test.skip">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/examples/IncomingCall/IncomingCall.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/includes/FONAConfig.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/includes/FONAExtIncludes.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/includes/platform/FONAPlatStd.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/includes/platform/FONAPlatform.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Adafruit_FONA/library.properties">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CMakeLists.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/.git">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/.github/FUNDING.yml">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/.travis.yml">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/CircularBuffer.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/CircularBuffer.tpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/README.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/CircularBuffer/CircularBuffer.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/EventLogging/EventLogging.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Interrupts/Interrupts.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Object/Object.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Object/Record.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Queue/Queue.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Stack/Stack.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Struct/Struct.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/examples/Test/Test.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/keywords.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/CircularBuffer/library.properties">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/.git">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/File.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/README.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/README.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/SD.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/SD.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/SD_t3.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/cache_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/card_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/dir_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/CardInfo/CardInfo.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/Datalogger/Datalogger.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/DumpFile/DumpFile.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/Files/Files.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/ReadWrite/ReadWrite.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/examples/listfiles/listfiles.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/fat_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/file_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/init_t3.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/keywords.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/library.properties">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/FatStructs.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/KinetisSDHC.c">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/Sd2Card.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/Sd2Card.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/Sd2PinMap.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdFat.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdFatUtil.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdFatmainpage.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdFile.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdInfo.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/SdVolume.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/SD/utility/ioreg.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/.git">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/CONTRIBUTING.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/LICENSE.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/README.md">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/Change_TZ_1/Change_TZ_1.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/Change_TZ_2/Change_TZ_2.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/Clock/Clock.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/HardwareRTC/HardwareRTC.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/WorldClock/WorldClock.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/WriteRules/WriteRules.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/examples/tzTest/tzTest.ino">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/keywords.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/library.properties">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/src/Timezone.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/lib/Timezone/src/Timezone.h">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/src/.DS_Store">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/src/CMakeLists.txt">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/src/main.cpp">
+			<Option target="Z_DUMMY_TARGET"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/Users/Dirk/Documents/Arduino/NRC/NRC_datalogger/CMakeListsPrivate.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

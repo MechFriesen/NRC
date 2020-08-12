@@ -3,7 +3,13 @@
 	url = git@github.com:UW-SDIC/Adafruit_FONA.git
 [submodule "NRC_datalogger/src/SD"]
 	path = NRC_datalogger/src/SD
-	url = git@github.com:UW-SDIC/SD.git
-[submodule "NRC_datalogger/src/Circular_Buffer"]
-	path = NRC_datalogger/src/Circular_Buffer
-	url = https://github.com/tonton81/Circular_Buffer.git
+	url = https://MechFriesen@github.com/UW-SDIC/SD.git
+[submodule "NRC_datalogger/src/Adafruit_FONA"]
+	path = NRC_datalogger/src/Adafruit_FONA
+	url = https://MechFriesen@github.com/UW-SDIC/Adafruit_FONA.git
+[submodule "NRC_datalogger/src/CircularBuffer"]
+	path = NRC_datalogger/src/CircularBuffer
+	url = https://github.com/rlogiacco/CircularBuffer
+[submodule "NRC_datalogger/src/Timezone"]
+	path = NRC_datalogger/src/Timezone
+	url = https://github.com/JChristensen/Timezone

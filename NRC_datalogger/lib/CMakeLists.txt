@@ -1,0 +1,11 @@
+add_library(arduino_core
+        Arduino.h
+        Print.cpp
+        HardwareSerial.h
+        wiring.c
+        wiring_shift.c
+        WInterrupts.c
+        wiring_analog.c
+        wiring_digital.c
+        WMath.cpp
+        wiring_pulse.c)
