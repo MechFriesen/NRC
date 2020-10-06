@@ -166,7 +166,7 @@ void loop() {
 	// print headers (TODO: Update for NRC project)
 	Serial.println("Seconds,\tAcc_x,\tAcc_y,\tAcc_z,\tGyro_x,\tGyro_y,\tGyro_z,\tMag_x,\tMag_y,\tMay_z,\tWind_V,\tWind_D");
 	dataFile.println("Seconds,Milliseconds,Accel_x,Accel_y,Accel_z,Gyro_x,Gyro_y,Gyro_z,Mag_x,Mag_y,Mag_z,"
-                  "Wind_D (ADC_counts),Wind_V (pulses since start), Temperature");
+                  "Wind_V (pulses since start),Wind_D (ADC_counts), Temperature");
 
 	// start logging
 	wind_pulse_count = 0;
@@ -380,13 +380,11 @@ void sleepCheck () {//
     // Turn off peripherals
     Serial.println("Turning peripherals off");
     digitalWrite (EN_SENSE, LOW);	// Power off main board sensors
-    if (useFONA) {
-        digitalWrite (NOT_C_ON, LOW);		// Toggle FONA power
-        delay(1000);
-        digitalWrite (NOT_C_ON, HIGH);
-        delay(2500);
-        digitalWrite (EN_DATA, LOW);	// turn off fona power supply
-    }
+    digitalWrite (NOT_C_ON, LOW);	// Toggle FONA power
+    delay(1000);
+    digitalWrite (NOT_C_ON, HIGH);
+    delay(2500);
+    digitalWrite (EN_DATA, LOW);	// turn off fona power supply
 
     // Logging sleep period
     Serial.println("OK. Going to sleep now...");
