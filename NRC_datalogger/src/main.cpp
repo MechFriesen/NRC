@@ -10,6 +10,7 @@
  	This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 */
 #include <Arduino.h>
+#include <stdio.h>
 #include <IntervalTimer.h>
 #include <Metro.h>
 #include <SD.h>
@@ -25,6 +26,7 @@
 
 // Firmware version string
 static char FirmwareVersion[] = "v2.1.6 - beta - " __DATE__ " " __TIME__ "";
+#define DEBUGGING_OUT true
 
 // Load sleep drivers
 SnoozeAlarm  alarm; // Using RTC
@@ -39,7 +41,7 @@ int sleep_period_secs = 0;
 const int	RX_PIN  = 10;
 const int	TX_PIN  = 9;
 const int	FONA_RST = 25;
-const int	PPS_PIN = 23; // 1PPS from SIM808 module
+const char * holo_key = "(hneFa_9";
 SoftwareSerial fonaSS = SoftwareSerial(TX_PIN, RX_PIN);
 SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
@@ -50,6 +52,7 @@ TimeChangeRule *tcr;	// pointer to time change rule for printing time zone abbre
 TimeChangeRule canEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
 TimeChangeRule canEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours
 Timezone canEastern(canEDT, canEST);
+static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 // LSM9DS1 setup
 const int CS_AG = 15;
@@ -85,6 +88,7 @@ uint32_t logDuration = 60;	// duration of logging in seconds
 float wind_speed_threshold = 10;    // km/hr
 bool useFONA = false, stayOn = false;
 SDClass SD;
+char lastFileSent[] = "10270231.CSV";
 
 void initializeSD();    // Open SD file system
 void SD_dateTime(uint16_t* date, uint16_t* time);   // callback function for setting file timestamps on SD
@@ -96,10 +100,12 @@ bool digitalWakeEnable();   // Enables wake from mode switch if hardware support
                             // NOTE: Switch must be in 'LOW' position for test to work
 void getUserTime(); // get the local time and date from serial interface
 void startFONA();   // Turn on FONA and get Network time
-void parseTime(char TimeStr[]); // convert user time input or network time into Teensy time struct
+void parseTime(char TimeStr[], bool isMacro); // convert user time input or network time into Teensy time struct
 void digitalClockDisplay();
 void windPulse();   // Pulse count ISR
-void sendStatus();		// sends the battery voltage
+void sendStatus();	// sends the battery voltage, and threshold value
+char * sendData();    // sends the most recent data files
+bool retrieveThreshold();   // reads a message from the hologram dashboard and updates the wind threshold for logging
 
 void setup() {
 	char c = '\0';
@@ -110,11 +116,14 @@ void setup() {
     strcpy(time_s, __DATE__);
     strcat(time_s, " ");
     strcat(time_s, __TIME__);
-    parseTime(time_s);
 
     Serial.begin(115200);
 
-	// configure pins
+    while(!Serial.available()) {}
+    Serial.printf("time_s: %s\n", time_s);
+    parseTime(time_s, true);
+
+    // configure pins
 	pinMode (CS_AG, OUTPUT);
 	pinMode (MCU_STAT, OUTPUT);
 	pinMode (EN_SENSE, OUTPUT);
@@ -122,7 +131,7 @@ void setup() {
 	pinMode (NOT_C_ON, OUTPUT);
 	pinMode(LED_BUILTIN, OUTPUT);
 	
-	digitalWrite (EN_DATA, LOW);		// FONA power supply off
+	digitalWrite (EN_DATA, LOW);	// FONA power supply off
 	digitalWrite (NOT_C_ON, HIGH);	// FONA off
 
 	delay(500);   // wait for serial
@@ -148,8 +157,11 @@ void setup() {
 void loop() {
 	char filename[20];
 
-    wakeUp();	// Power on external modules
+//    wakeUp();	// Power on external modules
     initializeSD();
+    delay(500);
+//    sendStatus();
+    sendData(); // here for debugging
 
 	// Display test parameters
 	Serial.println("\nStarting Sample");
@@ -177,35 +189,54 @@ void loop() {
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	// Go to sleep now (maybe, if the time is right)
-	sleepCheck();
-	digitalClockDisplay();
+    if (!stayOn)
+        sendData();
+        sleepCheck();
+    digitalClockDisplay();
 }
 
-void parseTime(char *TimeStr) {
-    char * tok;
-    uint8_t field = 0;	// which tm field we're on
-    tok = strtok(TimeStr, " /,:+-");
-    while (tok != nullptr)  {
-        switch(field) {
-            case 0 : tm.Year = atoi(tok);
-                break;
-            case 1 : tm.Month = atoi(tok);
-                break;
-            case 2 : tm.Day = atoi(tok);
-                break;
-            case 3 : tm.Hour = atoi(tok);
-                break;
-            case 4 : tm.Minute = atoi(tok);
-                break;
-            case 5 : tm.Second = atoi(tok);
-                break;
-            default:
-                break;
+void parseTime(char *TimeStr, bool isMacro) {
+    if (!isMacro) {
+        char * tok;
+        uint8_t field = 0;	// which tm field we're on
+        tok = strtok(TimeStr, " /,:+-");
+        while (tok != nullptr) {
+            switch (field) {
+                case 0 :
+                    tm.Year = atoi(tok);
+                    break;
+                case 1 :
+                    tm.Month = atoi(tok);
+                    break;
+                case 2 :
+                    tm.Day = atoi(tok);
+                    break;
+                case 3 :
+                    tm.Hour = atoi(tok);
+                    break;
+                case 4 :
+                    tm.Minute = atoi(tok);
+                    break;
+                case 5 :
+                    tm.Second = atoi(tok);
+                    break;
+                default:
+                    break;
+            }
+            field++;
+            tok = strtok(NULL, " /,:+-");
         }
-        field++;
-        tok = strtok(NULL, " /,:+-");
     }
-
+    else {
+        char buff[5] = "\0";
+        unsigned int month, hour, minute, second;   // for some reason sscanf needs these as intermediaries
+        sscanf(TimeStr, "%s %u %u %u:%u:%u", buff, &tm.Day, &tm.Year, &hour, &minute, &second);
+        month = (strstr(month_names, buff)-month_names)/3+1;
+        tm.Month = month;
+        tm.Hour = hour;
+        tm.Minute = minute;
+        tm.Second = second;
+    }
     setTime(tm.Hour, tm.Minute, tm.Second, tm.Day, tm.Month, tm.Year);
     Teensy3Clock.set(makeTime(tm));
     digitalClockDisplay();
@@ -279,7 +310,7 @@ void startFONA() {
         Serial.print(fona.enableNetworkTimeSync(true));
         delay(10000);   // delay to allow the 808 chip to get the time from the network
         fona.getTime(timeBuf, 25);
-        parseTime(timeBuf);
+        parseTime(timeBuf, false);
     }
 }
 
@@ -326,6 +357,7 @@ void loggingFun(File *dataFile) {
     pinMode(WIND_SPEED_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(WIND_SPEED_PIN), windPulse, FALLING);
 
+    fona.enableGPS(true);
     serialPrintTimer.reset();
     samplePeriod.reset();
     logStartTime = now();
@@ -346,7 +378,7 @@ void loggingFun(File *dataFile) {
             dataFile->printf("%i,%i,%f\n", wind_pulse_count, wind_dir, temp.temperature);
         }
 
-        if (serialPrintTimer.check() == true) {
+        if ((serialPrintTimer.check() == true) && (DEBUGGING_OUT)) {
             Serial.printf("%7i,", second());
             Serial.printf("\t%5f,\t%4f,\t%4f,", acc.acceleration.x, acc.acceleration.y, acc.acceleration.z);
             Serial.printf("\t%4f,\t%4f,\t%4f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
@@ -366,7 +398,6 @@ void sleepCheck () {//
 
     // Check mode switch pin state
     if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
-    else if (stayOn == true) return;    // Stay on
 
     if(minute()>0) {
         sleep_period_mins = 58-minute();
@@ -421,7 +452,7 @@ void getUserTime() {
         userTime[count] = c;
         count++;
     } while ((c != '\n') && (c != '\r'));	// newline or carriage return character received
-    parseTime(userTime);
+    parseTime(userTime, false);
 }
 
 void digitalClockDisplay() {
@@ -432,18 +463,59 @@ void windPulse() {
     wind_pulse_count++;
 }
 
-//void sendStatus() {		// sends the battery voltage
-//    char message[50];
-//    Serial.println("Sending status update");
-//    while(fona.getRSSI() < 10)	delay(200);
-//
-//    sprintf(message, "{\"battery\":\"%.02f\"}", readBattVolt());
-//    uint8_t sendAttempts = 0;
-//    while (!fona.Hologram_send(message, "STAT_") && sendAttempts < 5) {
-//        sendAttempts++;
-//    }
-//
-//    // This should shut down the data side of the FONA chip
-//    //fona.sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000);	// It might not have worked
-//    fona.enableGPRS(false);
-//}
+void sendStatus() {		// sends the battery voltage
+    char message[50] = "{";
+    Serial.println("Sending status update");
+    while(fona.getRSSI() < 10)	delay(200);
+
+    sprintf(message, R"("battery":%.02f, "stayOn":%b)", readBattVolt(), stayOn);
+    uint8_t sendAttempts = 0;
+    while (!fona.Hologram_send(message, holo_key) && sendAttempts < 5) {
+        sendAttempts++;
+    }
+
+    // This should shut down the data side of the FONA chip
+    //fona.sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000);	// It might not have worked
+    fona.enableGPRS(false);
+}
+
+char * sendData() {
+//    char * lastFileSent;
+    bool sendNext = false;
+    char * msg_data;
+    Serial.println("Listing files...");
+    File root = SD.open("/");
+    File file_sd = root.openNextFile();
+    while (file_sd) {
+        Serial.printf("Filename: %s\n", file_sd.name());
+        if (sendNext && (isAlphaNumeric(file_sd.name()[0]))) {
+            unsigned int fileSize = file_sd.size();  // Get the file size.
+            Serial.printf("File: %s \t\tsize: %i bytes (or %i)\n", file_sd.name(), fileSize, file_sd.size()),
+            msg_data = (char *) malloc(fileSize + 1);  // Allocate memory for the file and a terminating null char.
+            file_sd.read(msg_data, fileSize);         // Read the file into the buffer.
+            msg_data[fileSize] = '\0';               // Add the terminating null char.
+            Serial.print(msg_data);                // Print the file to the serial monitor.
+            file_sd.close();                         // Close the file.
+
+            // send function
+            elapsedMillis send_timeout = 0;
+//            while (!fona.Hologram_send(msg_data, holo_key, "_DATA") && send_timeout < 15000) {}
+
+            // clear buffer and update the last file that was sent
+            free(msg_data);                     // Free the memory that was used by the buffer.
+            strcpy(lastFileSent, file_sd.name());
+            continue;   // no need to check if the next file matches
+        }
+        if (!strcmp(lastFileSent, file_sd.name())) {
+            sendNext = true;
+
+            // Debugging
+            Serial.println("match found");
+            Serial.printf("file_sd.name(): %s", file_sd.name());
+            Serial.printf("\tlastFileSent: %s\n", lastFileSent);
+        }
+
+        file_sd = root.openNextFile();
+    }
+    return lastFileSent;
+}
