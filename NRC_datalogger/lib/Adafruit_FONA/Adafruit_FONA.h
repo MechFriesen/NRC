@@ -155,8 +155,8 @@ class Adafruit_FONA : public FONAStreamType {
   boolean Hologram_send(char *data, const char *key);
   boolean Hologram_send(char *data, const char *key, char *topics);
   boolean Hologram_send_char_array(char *data, uint8_t len, const char *key, char *topics);
-  int Hologram_availableMessage();
-  char * Hologram_readMessage();
+  boolean Hologram_send_char_array_connected(char *data, uint8_t len, const char *key, char *topics);
+
 
 
     // HTTP low level interface (maps directly to SIM800 commands).

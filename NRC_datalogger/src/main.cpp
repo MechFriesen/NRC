@@ -84,7 +84,7 @@ Metro samplePeriod = Metro(50);         // collect a sample every 50 ms (20 Hz)
 
 // Global variables
 uint32_t wind_pulse_count;
-uint32_t logDuration = 60;	// duration of logging in seconds
+uint32_t logDuration = 30;	// duration of logging in seconds
 float wind_speed_threshold = 0;    // km/hr
 bool useFONA = false, stayOn = false;
 SDClass SD;
@@ -363,7 +363,7 @@ void loggingFun(File *dataFile) {
     pinMode(WIND_SPEED_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(WIND_SPEED_PIN), windPulse, FALLING);
 
-    fona.enableGPS(true);
+    fona.enableGPS(false);
     serialPrintTimer.reset();
     samplePeriod.reset();
     logStartTime = now();
@@ -500,6 +500,7 @@ void sendData() {
     Serial.println(file_sd.name());
     Serial.printf("Filename: %s\n", file_sd.name());
     char row[120];
+    int row_num = 0;
     Serial.print("Sending data...");
     unsigned int fileSize = file_sd.size();             // Get the file size.
     Serial.printf("File: %s \t\tsize: %i bytes (or %i)\n", file_sd.name(), fileSize, file_sd.size());
@@ -522,9 +523,13 @@ void sendData() {
             sendAttempts++;
         }
         // Send Gyro
-        make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
+        uint8_t data_len = make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
+
+        Serial.print("Message: ");
+        Serial.println(msg_data);
+        Serial.printf("length: %u", data_len);
         sendAttempts = 0;
-        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
+        while (!fona.Hologram_send_char_array_connected(msg_data, data_len, holo_key, "D_") && sendAttempts < 5)
             sendAttempts++;
 
         make_json(msg_data, Seconds, Milliseconds, Mag, "Mag");
@@ -536,15 +541,16 @@ void sendData() {
         sendAttempts = 0;
         while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
             sendAttempts++;
-
-        strcpy(filesToSend[file_stack_ptr--], "\0");    // clear filename from LIFO buffer
-        file_sd.close();                                // Close the file.
-        file_sd = SD.open(filesToSend[file_stack_ptr], FILE_READ);
-        Serial.print("sent data\n");
-        // Debugging
-        Serial.println("match found");
-        Serial.printf("file_sd.name(): %s", file_sd.name());
+        if (row_num++%10 == 0)
+            Serial.println(row_num);
     }
+    strcpy(filesToSend[file_stack_ptr--], "\0");    // clear filename from LIFO buffer
+    file_sd.close();                                // Close the file.
+    file_sd = SD.open(filesToSend[file_stack_ptr], FILE_READ);
+    Serial.print("sent data\n");
+    // Debugging
+    Serial.println("match found");
+    Serial.printf("file_sd.name(): %s", file_sd.name());
 }
 
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, float *vals, char *name) {
