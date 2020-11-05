@@ -85,10 +85,12 @@ Metro samplePeriod = Metro(50);         // collect a sample every 50 ms (20 Hz)
 // Global variables
 uint32_t wind_pulse_count;
 uint32_t logDuration = 60;	// duration of logging in seconds
-float wind_speed_threshold = 10;    // km/hr
+float wind_speed_threshold = 0;    // km/hr
 bool useFONA = false, stayOn = false;
 SDClass SD;
 char lastFileSent[] = "09281613.CSV";
+char filesToSend[60][13];      // simple LIFO buffer of filenames with data that needs to be sent
+uint8_t file_stack_ptr = 0;
 
 void initializeSD();    // Open SD file system
 void SD_dateTime(uint16_t* date, uint16_t* time);   // callback function for setting file timestamps on SD
@@ -104,7 +106,7 @@ void parseTime(char TimeStr[], bool isMacro); // convert user time input or netw
 void digitalClockDisplay();
 void windPulse();   // Pulse count ISR
 void sendStatus();	// sends the battery voltage, and threshold value
-char * sendData();    // sends the most recent data files
+void sendData();    // sends the most recent data files
 uint8_t make_json( char *json_obj, uint32_t time_s, uint32_t time_ms, float *val, char *name);       // format a json string from the provided variables
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, uint16_t *wind, float temperature);
 void updateThreshold();   // reads a message from the hologram dashboard and updates the wind threshold for logging
@@ -155,12 +157,13 @@ void setup() {
 }
 
 void loop() {
-	char filename[20];
+	char filename[13];
 
     wakeUp();	// Power on external modules
     initializeSD();
     delay(500);
-    sendStatus();
+    updateThreshold();  // check for an incoming SMS with a different wind threshold for logging
+//    sendStatus();
 
 	// Display test parameters
 	Serial.println("\nStarting Sample");
@@ -174,7 +177,7 @@ void loop() {
 	}
 	Serial.printf("File: %s\n\r", filename);
 
-	// print headers (TODO: Update for NRC project)
+    // print headers
 	Serial.println("Seconds,\tAcc_x,\tAcc_y,\tAcc_z,\tGyro_x,\tGyro_y,\tGyro_z,\tMag_x,\tMag_y,\tMay_z,\tWind_V,\tWind_D");
 	dataFile.println("S,ms,Accel_x,Accel_y,Accel_z,Gyro_x,Gyro_y,Gyro_z,Mag_x,Mag_y,Mag_z,WindV,WindD,T");
 
@@ -186,9 +189,13 @@ void loop() {
 	dataFile.close();   // close file
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
+	// Add the file to the LIFO queue
+    strcpy(*(filesToSend+file_stack_ptr), filename);
+//    *(filesToSend+file_stack_ptr++) = filename;
+    Serial.println(filesToSend[file_stack_ptr]);
+
 	// Go to sleep now (maybe, if the time is right)
     if (!stayOn) {
-        updateThreshold();  // check for an incoming SMS with a different wind threshold for logging
         sendData();         // send the data
         sleepCheck();       // check if it's time to be sleeping
     }
@@ -375,14 +382,20 @@ void loggingFun(File *dataFile) {
             dataFile->printf("%5f,%5f,%5f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
             dataFile->printf("%5f,%5f,%5f,", mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
             dataFile->printf("%i,%i,%3f\n", wind_pulse_count, wind_dir, temp.temperature);
+
+            // for debugging
+//            dataFile->printf("%5f,%5f,%5f,", 5.0, 4.0, 3.0);
+//            dataFile->printf("%5f,%5f,%5f,", 5.0, 6.0, 7.0);
+//            dataFile->printf("%5f,%5f,%5f,", 1.1, 2.2, 3.3);
+//            dataFile->printf("%i,%i,%3f\n", 1, 300, 20.5);
         }
 
         if ((serialPrintTimer.check() == true) && (DEBUGGING_OUT)) {
             Serial.printf("%7i,", second());
-            Serial.printf("\t%5f,\t%4f,\t%4f,", acc.acceleration.x, acc.acceleration.y, acc.acceleration.z);
-            Serial.printf("\t%4f,\t%4f,\t%4f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
-            Serial.printf("\t%4f,\t%4f,\t%4f", mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
-            Serial.printf("\t%i,\t%i,\t%f\n", wind_pulse_count, wind_dir, temp.temperature);
+            Serial.printf("\t%.3f,\t%.3f,\t%.3f,", acc.acceleration.x, acc.acceleration.y, acc.acceleration.z);
+            Serial.printf("\t%.3f,\t%.3f,\t%.3f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
+            Serial.printf("\t%.3f,\t%.3f,\t%.3f", mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
+            Serial.printf("\t%i,\t%i,\t%.2f\n", wind_pulse_count, wind_dir, temp.temperature);
         }
     }
     float avg_wind_speed = wind_pulse_count*3.620/logDuration;
@@ -478,75 +491,60 @@ void sendStatus() {		// sends the battery voltage
     fona.enableGPRS(false);
 }
 
-char * sendData() {
+void sendData() {
     bool sendNext = false;
     while(fona.getRSSI() < 10)	delay(200);
-
-    Serial.println("Listing files...");
-    File root = SD.open("/");
-    File file_sd = root.openNextFile();
-    while (file_sd) {
-        Serial.printf("Filename: %s\n", file_sd.name());
-        if (sendNext && (isAlphaNumeric(file_sd.name()[0]))) {
-            char row[120];
-            Serial.print("Sending data...");
-            unsigned int fileSize = file_sd.size();             // Get the file size.
-            Serial.printf("File: %s \t\tsize: %i bytes (or %i)\n", file_sd.name(), fileSize, file_sd.size());
-            file_sd.readBytesUntil('\n', row, 120);
-            Serial.println(row);
-            while (file_sd.available()) {
+    Serial.println(filesToSend[file_stack_ptr]);
+    File file_sd = SD.open(*(filesToSend+file_stack_ptr), FILE_READ);
+    Serial.print("Sending file: ");
+    Serial.println(file_sd.name());
+    Serial.printf("Filename: %s\n", file_sd.name());
+    char row[120];
+    Serial.print("Sending data...");
+    unsigned int fileSize = file_sd.size();             // Get the file size.
+    Serial.printf("File: %s \t\tsize: %i bytes (or %i)\n", file_sd.name(), fileSize, file_sd.size());
+    file_sd.readBytesUntil('\n', row, 120);
+    while (file_sd.available()) {
 //                S,ms,Accel_x,Accel_y,Accel_z,Gyro_x,Gyro_y,Gyro_z,Mag_x,Mag_y,Mag_z,WindV,WindD,T"
-                uint32_t Seconds, Milliseconds;
-                float Accel[3], Gyro[3], Mag[3], Temperature;
-                uint16_t Wind[2];   // Speed and Direction
-                char msg_data[64];
-                file_sd.readBytesUntil('\n', row, 120);
-                sscanf(row, "%lu,%lu,%f,%f,%f,%f,%f,%f,%f,%f,%f,%hu,%hu,%f", &Seconds, &Milliseconds,
-                        &Accel[0], &Accel[1], &Accel[2], &Gyro[0], &Gyro[1], &Gyro[2],
-                        &Mag[0], &Mag[1], &Mag[2], &Wind[0], &Wind[1], &Temperature);
+        uint32_t Seconds, Milliseconds;
+        float Accel[3], Gyro[3], Mag[3], Temperature;
+        uint16_t Wind[2];   // Speed and Direction
+        char msg_data[64];
+        file_sd.readBytesUntil('\n', row, 120);
+        sscanf(row, "%lu,%lu,%f,%f,%f,%f,%f,%f,%f,%f,%f,%hu,%hu,%f", &Seconds, &Milliseconds,
+                &Accel[0], &Accel[1], &Accel[2], &Gyro[0], &Gyro[1], &Gyro[2],
+                &Mag[0], &Mag[1], &Mag[2], &Wind[0], &Wind[1], &Temperature);
 
-                // Send Acceleration
-                make_json(msg_data, Seconds, Milliseconds, Accel, "Acc");
-                uint8_t sendAttempts = 0;
-                while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
-                    sendAttempts++;
-                }
-                // Send Gyro
-                make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
-                sendAttempts = 0;
-                while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
-                    sendAttempts++;
-                }
-
-                make_json(msg_data, Seconds, Milliseconds, Mag, "Mag");
-                sendAttempts = 0;
-                while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
-                    sendAttempts++;
-                }
-
-                make_json(msg_data, Seconds, Milliseconds, Wind, Temperature);
-                sendAttempts = 0;
-                while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
-                    sendAttempts++;
-                }
-            }
-            file_sd.close();                                // Close the file.
-            Serial.print("sent data\n");
-            strcpy(lastFileSent, file_sd.name());
-            continue;   // no need to check if the next file matches
+        // Send Acceleration
+        make_json(msg_data, Seconds, Milliseconds, Accel, "Acc");
+        uint8_t sendAttempts = 0;
+        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
+            sendAttempts++;
         }
-        if (!strcmp(lastFileSent, file_sd.name())) {
-            sendNext = true;
+        // Send Gyro
+        make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
+        sendAttempts = 0;
+        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
+            sendAttempts++;
 
-            // Debugging
-            Serial.println("match found");
-            Serial.printf("file_sd.name(): %s", file_sd.name());
-            Serial.printf("\tlastFileSent: %s\n", lastFileSent);
-        }
+        make_json(msg_data, Seconds, Milliseconds, Mag, "Mag");
+        sendAttempts = 0;
+        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
+            sendAttempts++;
 
-        file_sd = root.openNextFile();
+        make_json(msg_data, Seconds, Milliseconds, Wind, Temperature);
+        sendAttempts = 0;
+        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
+            sendAttempts++;
+
+        strcpy(filesToSend[file_stack_ptr--], "\0");    // clear filename from LIFO buffer
+        file_sd.close();                                // Close the file.
+        file_sd = SD.open(filesToSend[file_stack_ptr], FILE_READ);
+        Serial.print("sent data\n");
+        // Debugging
+        Serial.println("match found");
+        Serial.printf("file_sd.name(): %s", file_sd.name());
     }
-    return lastFileSent;
 }
 
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, float *vals, char *name) {
@@ -579,7 +577,6 @@ void updateThreshold() {
             continue;
         }
         if (strstr( msg_in, "Threshold:") != nullptr) {     // Check for variations of "Threshold"
-            char * emptyStr;
             Serial.println("match");
             sscanf(msg_in, "%*s %f", &wind_speed_threshold);
         }
