@@ -1283,7 +1283,7 @@ boolean Adafruit_FONA::TCPconnected(void) {
 
   return (strcmp(replybuffer, "STATE: CONNECT OK") == 0);
 }
-boolean Adafruit_FONA::TCPsend(char *packet, uint16_t len) {
+boolean Adafruit_FONA::TCPsend(char *packet, uint8_t len) {
 
 	String cipSendCmd = "AT+CIPSEND=1,";
 	cipSendCmd += String(len);
@@ -1309,13 +1309,17 @@ boolean Adafruit_FONA::TCPsend(char *packet, uint16_t len) {
 	DEBUG_PRINTLN();
 	getReply(packet);
 	//mySerial->print(packet);
-	readline(10000); // wait up to 3 seconds to send the data
+	readline(3000); // wait up to 3 seconds to send the data
 
-	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+//	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
 
-	bool success_tcpsend = (strcmp(replybuffer, "1, SEND OK") == 0);
-    Serial.printf("replybuffer: %s, strcmp(replybuffer, \"1, SEND OK\"): %d\n", success_tcpsend);
-    return success_tcpsend;
+	bool success_tcpsend;
+//    return true;
+
+    success_tcpsend = (strcmp(replybuffer, "1, SEND OK") == 0);
+//	Serial.printf("replybuffer: %s, strcmp(replybuffer, \"1, SEND OK\"): %d\n", replybuffer, success_tcpsend);
+	return success_tcpsend;
+//    return (strcmp(replybuffer, "1, SEND OK") == 0);
 }
 uint16_t Adafruit_FONA::TCPavailable(void) {
   uint16_t avail;
@@ -1366,9 +1370,7 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key) {
 	uint8_t len = message_S.length();
 	char message_c[len+1];
 	message_S.toCharArray(message_c, len+1);
-	bool success = TCPsend(message_c, len+1);
-	Serial.printf("TCPsend successful? %i\n", success);
-	return success;
+	return TCPsend(message_c, len+1);
 }
 boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) {
 	enableGPS(false);
@@ -1390,11 +1392,9 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) 
 	uint8_t len = message_S.length();
 	char message_c[len+1];
 	message_S.toCharArray(message_c, len+1);
-    bool success = TCPsend(message_c, len+1);
-    Serial.printf("TCPsend successful? %i\n", success);
-    return success;
+    return TCPsend(message_c, len+1);
 }
-boolean Adafruit_FONA::Hologram_send_char_array(char *data, uint16_t len, const char *key, char *topics) {
+boolean Adafruit_FONA::Hologram_send_char_array(char *data, uint8_t len, const char *key, char *topics) {
     enableGPS(false);
     if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
     /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
@@ -1410,22 +1410,37 @@ boolean Adafruit_FONA::Hologram_send_char_array(char *data, uint16_t len, const 
 
 //    String data_S = (String) data;
 //    data_S.replace("\"","\\\"");
-    uint8_t overhead = 38;     // there a bunch of extra characters that we need to send
-    char message[len+overhead] = "\0";
-    strcat(message, "{\"k\":\"");   // 6
+    uint8_t overhead = 35;     // there a bunch of extra characters that we need to send
+//    char message[len+overhead] = {'/0'};
+    uint8_t msg_len = len+overhead;
+    char message[msg_len];
+//    char * message;
+//    message = (char *) malloc(200);    // Allocate memory for the file and a terminating null char.
+
+//    char *message;
+//    message[]
+    Serial.printf("message1: %s\n", message);
+    strcpy(message, "{\"k\":\"");   // 6
+    Serial.printf("message2: %s\n", message);
     strcat(message, key);           // 8
+    Serial.printf("message3: %s\n", message);
     strcat(message, "\",\"d\":\""); // 7
+    Serial.printf("message4: %s\n", message);
     strcat(message, data);
+    Serial.printf("message5: %s\n", message);
     strcat(message, "\",\"t\":\""); // 7
+    Serial.printf("message6: %s\n", message);
     strcat(message, topics);        // DATA_ = 5
+    Serial.printf("message7: %s\n", message);
     strcat(message, "\"}\r\0");     // 4
+    Serial.printf("message8: %s\n", message);
 //    + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
 //    uint8_t len = message_S.length();
 //    char message_c[len+1];
 //    message_S.toCharArray(message_c, len+1);
-    bool success = TCPsend(message, len+overhead);
-    Serial.printf("TCPsend successful? %i\n", success);
-    return success;
+    bool send_success = TCPsend(message, msg_len);
+    Serial.printf("send_success: %i\n", send_success);
+    return TCPsend(message, len+overhead);
 }
 /*int Adafruit_FONA::availableMessage() {
     int l = _MESSAGEBUFFER.length();
@@ -1722,7 +1737,7 @@ uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {
 
   while (timeout--) {
     if (replyidx >= 254) {
-      //DEBUG_PRINTLN(F("SPACE"));
+      DEBUG_PRINTLN(F("SPACE"));
       break;
     }
 
@@ -1744,7 +1759,7 @@ uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {
     }
 
     if (timeout == 0) {
-      //DEBUG_PRINTLN(F("TIMEOUT"));
+//      DEBUG_PRINTLN(F("TIMEOUT"));
       break;
     }
     delay(1);

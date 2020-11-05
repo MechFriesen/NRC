@@ -149,12 +149,12 @@ class Adafruit_FONA : public FONAStreamType {
   boolean TCPconnect(char *server, uint16_t port);
   boolean TCPclose(void);
   boolean TCPconnected(void);
-  boolean TCPsend(char *packet, uint16_t len);
+  boolean TCPsend(char *packet, uint8_t len);
   uint16_t TCPavailable(void);
   uint16_t TCPread(uint8_t *buff, uint8_t len);
   boolean Hologram_send(char *data, const char *key);
   boolean Hologram_send(char *data, const char *key, char *topics);
-  boolean Hologram_send_char_array(char *data, uint16_t len, const char *key, char *topics);
+  boolean Hologram_send_char_array(char *data, uint8_t len, const char *key, char *topics);
   int Hologram_availableMessage();
   char * Hologram_readMessage();
 
