@@ -1366,14 +1366,13 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key) {
 
 	String data_S = (String) data;
 	data_S.replace("\"","\\\"");
-	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\"}\r";
+	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\"}\n\n";
 	uint8_t len = message_S.length();
 	char message_c[len+1];
-	message_S.toCharArray(message_c, len+1);
+	message_S.toCharArray(message_c, len);
 	return TCPsend(message_c, len+1);
 }
 boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) {
-//	enableGPS(false);
 	if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
 	/*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
 		if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
@@ -1388,86 +1387,11 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) 
 
 	String data_S = (String) data;
 	data_S.replace("\"","\\\"");
-	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
+	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\",\"t\":\"" + String(topics) +"\"}\n\n";
 	uint8_t len = message_S.length();
 	char message_c[len+1];
-	message_S.toCharArray(message_c, len+1);
+	message_S.toCharArray(message_c, len);
     return TCPsend(message_c, len+1);
-}
-boolean Adafruit_FONA::Hologram_send_char_array(char *data, uint8_t len, const char *key, char *topics) {
-//    enableGPS(false);
-    if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
-    /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
-        if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
-            return false;*/
-    if (! sendCheckReply(F("AT+CIPMUX=1"), ok_reply) ) return false;			// set to multi connection mode
-    if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
-    if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
-    sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
-    sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
-    readline(20000);
-    DEBUG_PRINT(F("\t<--- ")); DEBUG_PRINTLN(replybuffer);		// debugging output
-
-//    String data_S = (String) data;
-//    data_S.replace("\"","\\\"");
-    uint8_t overhead = 35;     // there a bunch of extra characters that we need to send
-//    char message[len+overhead] = {'/0'};
-    uint8_t msg_len = len+overhead;
-    char message[msg_len];
-//    char * message;
-//    message = (char *) malloc(200);    // Allocate memory for the file and a terminating null char.
-
-//    char *message;
-//    message[]
-//    Serial.printf("message1: %s\n", message);
-    strcpy(message, "{\"k\":\"");   // 6
-//    Serial.printf("message2: %s\n", message);
-    strcat(message, key);           // 8
-//    Serial.printf("message3: %s\n", message);
-    strcat(message, "\",\"d\":\""); // 7
-//    Serial.printf("message4: %s\n", message);
-    strcat(message, data);
-//    Serial.printf("message5: %s\n", message);
-    strcat(message, "\",\"t\":\""); // 7
-//    Serial.printf("message6: %s\n", message);
-    strcat(message, topics);        // DATA_ = 5
-//    Serial.printf("message7: %s\n", message);
-    strcat(message, "\"}\r\0");     // 4
-//    Serial.printf("message8: %s\n", message);
-//    + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
-//    uint8_t len = message_S.length();
-//    char message_c[len+1];
-//    message_S.toCharArray(message_c, len+1);
-//    bool send_success = TCPsend(message, msg_len);
-//    Serial.printf("send_success: %i\n", send_success);
-    return TCPsend(message, msg_len);
-}
-boolean Adafruit_FONA::Hologram_send_char_array_connected(char *data, uint8_t len, const char *key, char *topics) {
-//    if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
-    /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
-        if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
-            return false;*/
-//    if (! sendCheckReply(F("AT+CIPMUX=1"), ok_reply) ) return false;			// set to multi connection mode
-//    if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
-//    if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
-//    sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
-//    sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
-    readline(20000);
-
-    uint8_t overhead = 33;     // there a bunch of extra characters that we need to send
-    uint8_t msg_len = len+overhead;
-    char message[msg_len];
-    strcpy(message, "{\"k\":\"");   // 6
-    strcat(message, key);           // 8
-    strcat(message, "\",\"d\":\""); // 7
-    strcat(message, data);
-    strcat(message, "\",\"t\":\""); // 7
-    strcat(message, topics);        // D_ = 2
-    strcat(message, "\"}\0");     // 3
-    msg_len = strlen(message);
-    Serial.printf("full message: %s\n", message);
-    Serial.printf("length: %u\n", msg_len);
-    return TCPsend(message, msg_len+1);
 }
 
 /********* HTTP LOW LEVEL FUNCTIONS  ************************************/
