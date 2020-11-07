@@ -382,7 +382,7 @@ void loggingFun(File *dataFile) {
             ExtSensor.read();
             wind_dir = analogRead(WIND_DIR_PIN);
             ExtSensor.getEvent(&acc, &mag, &gyro, &temp);
-            dataFile->printf("%i,%u,", second(), micros());
+            dataFile->printf("%i,%u,", now(), micros());
             dataFile->printf("%5f,%5f,%5f,", acc.acceleration.x, acc.acceleration.y, acc.acceleration.z);
             dataFile->printf("%5f,%5f,%5f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
             dataFile->printf("%5f,%5f,%5f,", mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
@@ -396,7 +396,7 @@ void loggingFun(File *dataFile) {
         }
 
         if ((serialPrintTimer.check() == true) && (DEBUGGING_OUT)) {
-            Serial.printf("%7i,", second());
+            Serial.printf("%7i,", now());
             Serial.printf("\t%.3f,\t%.3f,\t%.3f,", acc.acceleration.x, acc.acceleration.y, acc.acceleration.z);
             Serial.printf("\t%.3f,\t%.3f,\t%.3f,", gyro.gyro.x, gyro.gyro.y, gyro.gyro.z);
             Serial.printf("\t%.3f,\t%.3f,\t%.3f", mag.magnetic.x, mag.magnetic.y, mag.magnetic.z);
@@ -521,7 +521,7 @@ void sendData() {
         sscanf(row, "%lu,%lu,%f,%f,%f,%f,%f,%f,%f,%f,%f,%hu,%hu,%f", &Seconds, &Milliseconds,
                 &Accel[0], &Accel[1], &Accel[2], &Gyro[0], &Gyro[1], &Gyro[2],
                 &Mag[0], &Mag[1], &Mag[2], &Wind[0], &Wind[1], &Temperature);
-        sprintf(msg_data, "%lu,%lu,%.4f,%.4f,%.4f,%.3f,%3f,%.3f", Seconds, (Milliseconds % 1000000),
+        sprintf(msg_data, "%lu,%lu,%.4f,%.4f,%.4f,%.3f,%.3f,%.3f", Seconds, (Milliseconds % 1000000),
                 Accel[0], Accel[1], Accel[2], Gyro[0], Gyro[1], Gyro[2]);
 
         uint8_t sendAttempts = 0;
