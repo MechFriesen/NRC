@@ -41,7 +41,8 @@ int sleep_period_secs = 0;
 const int	RX_PIN  = 10;
 const int	TX_PIN  = 9;
 const int	FONA_RST = 25;
-const char * holo_key = "(hneFa_9";
+//const char * holo_key = "(hneFa_9"; // for SIM card on pavilion
+const char * holo_key = "pzo<6THI"; // SIM card for testing
 SoftwareSerial fonaSS = SoftwareSerial(TX_PIN, RX_PIN);
 SoftwareSerial *fonaSerial = &fonaSS;
 Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
@@ -84,11 +85,10 @@ Metro samplePeriod = Metro(50);         // collect a sample every 50 ms (20 Hz)
 
 // Global variables
 uint32_t wind_pulse_count;
-uint32_t logDuration = 30;	// duration of logging in seconds
-float wind_speed_threshold = 0;    // km/hr
+uint32_t logDuration = 10;	// duration of logging in seconds
+float wind_speed_threshold = 10;    // km/hr
 bool useFONA = false, stayOn = false;
 SDClass SD;
-char lastFileSent[] = "09281613.CSV";
 char filesToSend[60][13];      // simple LIFO buffer of filenames with data that needs to be sent
 uint8_t file_stack_ptr = 0;
 
@@ -107,8 +107,11 @@ void digitalClockDisplay();
 void windPulse();   // Pulse count ISR
 void sendStatus();	// sends the battery voltage, and threshold value
 void sendData();    // sends the most recent data files
+void sendData_test();
 uint8_t make_json( char *json_obj, uint32_t time_s, uint32_t time_ms, float *val, char *name);       // format a json string from the provided variables
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, uint16_t *wind, float temperature);
+
+
 void updateThreshold();   // reads a message from the hologram dashboard and updates the wind threshold for logging
 
 void setup() {
@@ -162,8 +165,11 @@ void loop() {
     wakeUp();	// Power on external modules
     initializeSD();
     delay(500);
-    updateThreshold();  // check for an incoming SMS with a different wind threshold for logging
+//    updateThreshold();  // check for an incoming SMS with a different wind threshold for logging
 //    sendStatus();
+
+    strcpy(*(filesToSend+file_stack_ptr++), "11061944.csv");
+    sendData();
 
 	// Display test parameters
 	Serial.println("\nStarting Sample");
@@ -190,9 +196,7 @@ void loop() {
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	// Add the file to the LIFO queue
-    strcpy(*(filesToSend+file_stack_ptr), filename);
-//    *(filesToSend+file_stack_ptr++) = filename;
-    Serial.println(filesToSend[file_stack_ptr]);
+    strcpy(*(filesToSend+file_stack_ptr++), filename);
 
 	// Go to sleep now (maybe, if the time is right)
     if (!stayOn) {
@@ -203,7 +207,7 @@ void loop() {
 }
 
 void parseTime(char *TimeStr, bool isMacro) {
-    if (!isMacro) {
+    if (!isMacro) {     // This is a mess and should be fixed to use sscanf()
         char * tok;
         uint8_t field = 0;	// which tm field we're on
         tok = strtok(TimeStr, " /,:+-");
@@ -492,13 +496,12 @@ void sendStatus() {		// sends the battery voltage
 }
 
 void sendData() {
-    bool sendNext = false;
+    // Make sure there's a signal
     while(fona.getRSSI() < 10)	delay(200);
-    Serial.println(filesToSend[file_stack_ptr]);
-    File file_sd = SD.open(*(filesToSend+file_stack_ptr), FILE_READ);
-    Serial.print("Sending file: ");
-    Serial.println(file_sd.name());
-    Serial.printf("Filename: %s\n", file_sd.name());
+
+    // open the file to send
+    File file_sd = SD.open(*(filesToSend+(--file_stack_ptr)), FILE_READ);
+    Serial.printf("Sending: %s\n", file_sd.name());
     char row[120];
     int row_num = 0;
     Serial.print("Sending data...");
@@ -516,12 +519,25 @@ void sendData() {
                 &Accel[0], &Accel[1], &Accel[2], &Gyro[0], &Gyro[1], &Gyro[2],
                 &Mag[0], &Mag[1], &Mag[2], &Wind[0], &Wind[1], &Temperature);
 
+//        char url[80] = "http://bfp-http-post.s3-website.us-east-2.amazonaws.com";
+//        char url[80] = "http://6076071d5a9aabc1a2b0971da3d9d0d9.m.pipedream.net";
+        char url[120] = "https://a1zd72x65vl12s-ats.iot.us-east-2.amazonaws.com:8443/bfp-sense?qos=1";
+
+//       Google key NP5TZlKuG5I6k4tp9oBA9IuwiPXvi/380A95mo8b
+
+        uint16_t status_code, length;
+        fona.enableGPRS(true);
+        fona.HTTP_POST_start(url, F("text/plain"), row, strlen(row), &status_code, &length);
+
+/*
         // Send Acceleration
         make_json(msg_data, Seconds, Milliseconds, Accel, "Acc");
+        Serial.printf("Sending data: %s", msg_data);
         uint8_t sendAttempts = 0;
         while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
             sendAttempts++;
         }
+
         // Send Gyro
         uint8_t data_len = make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
 
@@ -529,7 +545,7 @@ void sendData() {
         Serial.println(msg_data);
         Serial.printf("length: %u", data_len);
         sendAttempts = 0;
-        while (!fona.Hologram_send_char_array_connected(msg_data, data_len, holo_key, "D_") && sendAttempts < 5)
+        while (!fona.Hologram_send_connected(msg_data, holo_key, "D_") && sendAttempts < 5)
             sendAttempts++;
 
         make_json(msg_data, Seconds, Milliseconds, Mag, "Mag");
@@ -542,7 +558,7 @@ void sendData() {
         while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
             sendAttempts++;
         if (row_num++%10 == 0)
-            Serial.println(row_num);
+            Serial.println(row_num);*/
     }
     strcpy(filesToSend[file_stack_ptr--], "\0");    // clear filename from LIFO buffer
     file_sd.close();                                // Close the file.
@@ -551,6 +567,9 @@ void sendData() {
     // Debugging
     Serial.println("match found");
     Serial.printf("file_sd.name(): %s", file_sd.name());
+}
+void sendData_test() {
+    // Make sure there's a signal
 }
 
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, float *vals, char *name) {

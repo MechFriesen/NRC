@@ -1254,17 +1254,17 @@ boolean Adafruit_FONA::TCPconnect(char *server, uint16_t port) {
   // manually read data
   //if (! sendCheckReply(F("AT+CIPRXGET=1"), ok_reply) ) return false;
 
-  DEBUG_PRINT(F("AT+CIPSTART=\"TCP\",\""));
+  DEBUG_PRINT(F("AT+CIPSTART=1,\"TCP\",\""));
   DEBUG_PRINT(server);
   DEBUG_PRINT(F("\",\""));
   DEBUG_PRINT(port);
-  DEBUG_PRINTLN(F("\""));
+  DEBUG_PRINTLN(F("\"\n\r"));
 
-  mySerial->print(F("AT+CIPSTART=\"TCP\",\""));
+  mySerial->print(F("AT+CIPSTART=1,\"TCP\",\""));
   mySerial->print(server);
   mySerial->print(F("\",\""));
   mySerial->print(port);
-  mySerial->println(F("\""));
+  mySerial->println(F("\"\n\r"));
 
   if (! expectReply(ok_reply)) return false;
   if (! expectReply(F("CONNECT OK"))) return false;
@@ -1307,18 +1307,12 @@ boolean Adafruit_FONA::TCPsend(char *packet, uint8_t len) {
 #endif
 
 	DEBUG_PRINTLN();
-	getReply(packet);
-	//mySerial->print(packet);
+//	getReply(packet);
+	mySerial->write(packet, len);
 	readline(3000); // wait up to 3 seconds to send the data
 
-//	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
-
-	bool success_tcpsend;
-//    return true;
-
-    success_tcpsend = (strcmp(replybuffer, "1, SEND OK") == 0);
-//	Serial.printf("replybuffer: %s, strcmp(replybuffer, \"1, SEND OK\"): %d\n", replybuffer, success_tcpsend);
-	return success_tcpsend;
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+	return (strcmp(replybuffer, "1, SEND OK") == 0);
 //    return (strcmp(replybuffer, "1, SEND OK") == 0);
 }
 uint16_t Adafruit_FONA::TCPavailable(void) {
@@ -1368,12 +1362,11 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key) {
 	data_S.replace("\"","\\\"");
 	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\"}\r";
 	uint8_t len = message_S.length();
-	char message_c[len+1];
-	message_S.toCharArray(message_c, len+1);
-	return TCPsend(message_c, len+1);
+	char message_c[len];
+	message_S.toCharArray(message_c, len);
+	return TCPsend(message_c, len);
 }
 boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) {
-//	enableGPS(false);
 	if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
 	/*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
 		if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
@@ -1382,92 +1375,43 @@ boolean Adafruit_FONA::Hologram_send(char *data, const char *key, char *topics) 
 	if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
 	if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
 	sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
-	sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
-	readline(20000);
+	sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\"\n\r"), ok_reply, 20000);	// start TCP connection
+    readline(20000);
 	DEBUG_PRINT(F("\t<--- ")); DEBUG_PRINTLN(replybuffer);		// debugging output
 
 	String data_S = (String) data;
 	data_S.replace("\"","\\\"");
 	String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
 	uint8_t len = message_S.length();
-	char message_c[len+1];
-	message_S.toCharArray(message_c, len+1);
-    return TCPsend(message_c, len+1);
+	char message_c[len];
+	message_S.toCharArray(message_c, len);
+    return TCPsend(message_c, len);
 }
-boolean Adafruit_FONA::Hologram_send_char_array(char *data, uint8_t len, const char *key, char *topics) {
-//    enableGPS(false);
-    if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
-    /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
-        if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
-            return false;*/
-    if (! sendCheckReply(F("AT+CIPMUX=1"), ok_reply) ) return false;			// set to multi connection mode
-    if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
-    if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
-    sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
-    sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
-    readline(20000);
-    DEBUG_PRINT(F("\t<--- ")); DEBUG_PRINTLN(replybuffer);		// debugging output
+boolean Adafruit_FONA::Hologram_send_connected(char *data, const char *key, char *topics) {
+    uint8_t attempts = 0;
+//    if (!TCPconnected() && attempts < 10) {
+//        delay(100);
+//    }
+//    while (!TCPconnected() && attempts < 5){
+//        if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
+        /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
+            if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
+                return false;*/
+//        if (! sendCheckReply(F("AT+CIPMUX=1"), ok_reply) ) return false;			// set to multi connection mode
+//        if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
+//        if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
+//        sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
+        sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
+//        readline(20000);
+//    }
 
-//    String data_S = (String) data;
-//    data_S.replace("\"","\\\"");
-    uint8_t overhead = 35;     // there a bunch of extra characters that we need to send
-//    char message[len+overhead] = {'/0'};
-    uint8_t msg_len = len+overhead;
-    char message[msg_len];
-//    char * message;
-//    message = (char *) malloc(200);    // Allocate memory for the file and a terminating null char.
-
-//    char *message;
-//    message[]
-//    Serial.printf("message1: %s\n", message);
-    strcpy(message, "{\"k\":\"");   // 6
-//    Serial.printf("message2: %s\n", message);
-    strcat(message, key);           // 8
-//    Serial.printf("message3: %s\n", message);
-    strcat(message, "\",\"d\":\""); // 7
-//    Serial.printf("message4: %s\n", message);
-    strcat(message, data);
-//    Serial.printf("message5: %s\n", message);
-    strcat(message, "\",\"t\":\""); // 7
-//    Serial.printf("message6: %s\n", message);
-    strcat(message, topics);        // DATA_ = 5
-//    Serial.printf("message7: %s\n", message);
-    strcat(message, "\"}\r\0");     // 4
-//    Serial.printf("message8: %s\n", message);
-//    + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
-//    uint8_t len = message_S.length();
-//    char message_c[len+1];
-//    message_S.toCharArray(message_c, len+1);
-//    bool send_success = TCPsend(message, msg_len);
-//    Serial.printf("send_success: %i\n", send_success);
-    return TCPsend(message, msg_len);
-}
-boolean Adafruit_FONA::Hologram_send_char_array_connected(char *data, uint8_t len, const char *key, char *topics) {
-//    if (! sendCheckReply(F("AT+CIPSHUT"), F("SHUT OK"), 20000) ) return false;	// close the channel
-    /*if (! sendParseReply(F("AT+CGATT?"), F("+CGATT: "), &state) )
-        if (! sendCheckReply(F("AT+CGATT=1"), ok_reply, 10000))
-            return false;*/
-//    if (! sendCheckReply(F("AT+CIPMUX=1"), ok_reply) ) return false;			// set to multi connection mode
-//    if (! sendCheckReply(F("AT+CSTT=\"hologram\""), ok_reply) ) return false;	// set apn
-//    if (! sendCheckReply(F("AT+CIICR"), ok_reply, 20000) ) return false;		// bring up network connection
-//    sendCheckReply(F("AT+CIFSR"), ok_reply);									// check IP address
-//    sendCheckReply(F("AT+CIPSTART=1,\"TCP\",\"cloudsocket.hologram.io\",\"9999\""), ok_reply, 20000);	// start TCP connection
-    readline(20000);
-
-    uint8_t overhead = 33;     // there a bunch of extra characters that we need to send
-    uint8_t msg_len = len+overhead;
-    char message[msg_len];
-    strcpy(message, "{\"k\":\"");   // 6
-    strcat(message, key);           // 8
-    strcat(message, "\",\"d\":\""); // 7
-    strcat(message, data);
-    strcat(message, "\",\"t\":\""); // 7
-    strcat(message, topics);        // D_ = 2
-    strcat(message, "\"}\0");     // 3
-    msg_len = strlen(message);
-    Serial.printf("full message: %s\n", message);
-    Serial.printf("length: %u\n", msg_len);
-    return TCPsend(message, msg_len+1);
+    String data_S = (String) data;
+    data_S.replace("\"","\\\"");
+    String message_S = "{\"k\":\"" + String(key) + "\",\"d\":\"" + data_S + "\",\"t\":\"" + String(topics) +"\"}\r";
+    uint8_t len = message_S.length();
+    char message_c[len];
+    message_S.toCharArray(message_c, len);
+    return TCPsend(message_c, len);
 }
 
 /********* HTTP LOW LEVEL FUNCTIONS  ************************************/
@@ -1650,8 +1594,45 @@ boolean Adafruit_FONA::HTTP_POST_start(char *url,
   // HTTP response data
   if (! HTTP_readall(datalen))
     return false;
-
+    Serial.println(replybuffer);
   return true;
+}
+boolean Adafruit_FONA::HTTP_POST_start_auth(char *url,
+                                       FONAFlashStringPtr contenttype,
+                                       const uint8_t *postdata, uint16_t postdatalen,
+                                       uint16_t *status, uint16_t *datalen) {
+    if (!HTTP_setup(url))
+        return false;
+
+    if (!HTTP_para(F("CONTENT"), contenttype)) {
+        return false;
+    }
+    char JWT[80] = "Bearer NP5TZlKuG5I6k4tp9oBA9IuwiPXvi/380A95mo8b";
+    if (!HTTP_para(F("authorization"), JWT)) {
+        Serial.println("Auth failed");
+        return false;
+    }
+    // HTTP POST data
+    if (!HTTP_data(postdatalen, 10000))
+        return false;
+    mySerial->write(postdata, postdatalen);
+    if (!expectReply(ok_reply))
+        return false;
+
+    // HTTP POST
+    if (!HTTP_action(FONA_HTTP_POST, status, datalen))
+        return false;
+
+    DEBUG_PRINT(F("Status: "));
+    DEBUG_PRINTLN(*status);
+    DEBUG_PRINT(F("Len: "));
+    DEBUG_PRINTLN(*datalen);
+
+    // HTTP response data
+    if (!HTTP_readall(datalen))
+        return false;
+    Serial.println(replybuffer);
+    return true;
 }
 void Adafruit_FONA::HTTP_POST_end(void) {
   HTTP_term();
