@@ -80,12 +80,12 @@ const int MODE = 6;         // mode switch pin
 
 // Timers
 Metro serialPrintTimer = Metro(5000);	// triggers serial print every 5 s
-Metro samplePeriod = Metro(50);         // collect a sample every 50 ms (20 Hz)
+Metro samplePeriod = Metro(50);         // collect a sample every 200 ms (5 Hz)
 
 // Global variables
 uint32_t wind_pulse_count;
-uint32_t logDuration = 30;	// duration of logging in seconds
-float wind_speed_threshold = 0;    // km/hr
+uint32_t logDuration = 60;	// duration of logging in seconds
+float wind_speed_threshold = 10;    // km/hr
 bool useFONA = false, stayOn = false;
 SDClass SD;
 char lastFileSent[] = "09281613.CSV";
@@ -108,7 +108,9 @@ void windPulse();   // Pulse count ISR
 void sendStatus();	// sends the battery voltage, and threshold value
 void sendData();    // sends the most recent data files
 uint8_t make_json( char *json_obj, uint32_t time_s, uint32_t time_ms, float *val, char *name);       // format a json string from the provided variables
+uint8_t make_json( char *json_obj, uint32_t time_s, uint32_t time_ms, char *name, float *val, char *name2, float *vals2);
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, uint16_t *wind, float temperature);
+
 void updateThreshold();   // reads a message from the hologram dashboard and updates the wind threshold for logging
 
 void setup() {
@@ -163,9 +165,13 @@ void loop() {
     initializeSD();
     delay(500);
     updateThreshold();  // check for an incoming SMS with a different wind threshold for logging
-//    sendStatus();
+    sendStatus();
 
-	// Display test parameters
+    // here for debugging
+//    strcpy(*(filesToSend+file_stack_ptr), filename);
+//    sendData();         // send the data
+
+    // Display test parameters
 	Serial.println("\nStarting Sample");
 
 	// Open file
@@ -190,9 +196,8 @@ void loop() {
 	Serial.printf("Finished logging to %s\n\n\r", filename);
 
 	// Add the file to the LIFO queue
-    strcpy(*(filesToSend+file_stack_ptr), filename);
-//    *(filesToSend+file_stack_ptr++) = filename;
-    Serial.println(filesToSend[file_stack_ptr]);
+    strcpy(*(filesToSend+file_stack_ptr++), filename);
+    Serial.println(filesToSend[file_stack_ptr-1]);
 
 	// Go to sleep now (maybe, if the time is right)
     if (!stayOn) {
@@ -412,12 +417,12 @@ void sleepCheck () {//
     if (!digitalRead(MODE)) return;		// Mode switch == FULL (V == 0V) -> no sleeping
 
     if(minute()>0) {
-        sleep_period_mins = 58-minute();
-        sleep_period_secs = 60-second();
+        sleep_period_mins = 59-minute();
+        sleep_period_secs = 59-second();
     }
     else {
         sleep_period_mins = 59;
-        sleep_period_secs = 60-second();
+        sleep_period_secs = 59-second();
     }
 
     // Turn off peripherals
@@ -495,62 +500,52 @@ void sendData() {
     bool sendNext = false;
     while(fona.getRSSI() < 10)	delay(200);
     Serial.println(filesToSend[file_stack_ptr]);
-    File file_sd = SD.open(*(filesToSend+file_stack_ptr), FILE_READ);
+    File file_sd = SD.open(*(filesToSend+(--file_stack_ptr)), FILE_READ);
     Serial.print("Sending file: ");
     Serial.println(file_sd.name());
     Serial.printf("Filename: %s\n", file_sd.name());
-    char row[120];
+    char header[120];
     int row_num = 0;
     Serial.print("Sending data...");
     unsigned int fileSize = file_sd.size();             // Get the file size.
     Serial.printf("File: %s \t\tsize: %i bytes (or %i)\n", file_sd.name(), fileSize, file_sd.size());
-    file_sd.readBytesUntil('\n', row, 120);
+    file_sd.readBytesUntil('\n', header, 120);
     while (file_sd.available()) {
 //                S,ms,Accel_x,Accel_y,Accel_z,Gyro_x,Gyro_y,Gyro_z,Mag_x,Mag_y,Mag_z,WindV,WindD,T"
         uint32_t Seconds, Milliseconds;
         float Accel[3], Gyro[3], Mag[3], Temperature;
         uint16_t Wind[2];   // Speed and Direction
-        char msg_data[64];
-        file_sd.readBytesUntil('\n', row, 120);
+        char msg_data[90] = {'\0'};
+        char row[140];
+        file_sd.readBytesUntil('\n', row, 140);
         sscanf(row, "%lu,%lu,%f,%f,%f,%f,%f,%f,%f,%f,%f,%hu,%hu,%f", &Seconds, &Milliseconds,
                 &Accel[0], &Accel[1], &Accel[2], &Gyro[0], &Gyro[1], &Gyro[2],
                 &Mag[0], &Mag[1], &Mag[2], &Wind[0], &Wind[1], &Temperature);
+        sprintf(msg_data, "%lu,%lu,%.4f,%.4f,%.4f,%.3f,%3f,%.3f", Seconds, (Milliseconds % 1000000),
+                Accel[0], Accel[1], Accel[2], Gyro[0], Gyro[1], Gyro[2]);
 
-        // Send Acceleration
-        make_json(msg_data, Seconds, Milliseconds, Accel, "Acc");
         uint8_t sendAttempts = 0;
-        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5) {
+        while (!fona.Hologram_send(msg_data, holo_key, "D_A") && sendAttempts < 5) {
             sendAttempts++;
         }
-        // Send Gyro
-        uint8_t data_len = make_json(msg_data, Seconds, Milliseconds, Gyro, "Gyr");
+        sprintf(msg_data,"%lu,%lu,%.3f,%.3f,%.3f,%u,%u,%.1f", Seconds, (Milliseconds % 1000000), Mag[0], Mag[1], Mag[2],
+                Wind[0], Wind[1], Temperature);
 
-        Serial.print("Message: ");
-        Serial.println(msg_data);
-        Serial.printf("length: %u", data_len);
         sendAttempts = 0;
-        while (!fona.Hologram_send_char_array_connected(msg_data, data_len, holo_key, "D_") && sendAttempts < 5)
+        while (!fona.Hologram_send(msg_data, holo_key, "D_B") && sendAttempts < 5) {
             sendAttempts++;
+        }
 
-        make_json(msg_data, Seconds, Milliseconds, Mag, "Mag");
-        sendAttempts = 0;
-        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
-            sendAttempts++;
-
-        make_json(msg_data, Seconds, Milliseconds, Wind, Temperature);
-        sendAttempts = 0;
-        while (!fona.Hologram_send(msg_data, holo_key, "D_") && sendAttempts < 5)
-            sendAttempts++;
-        if (row_num++%10 == 0)
-            Serial.println(row_num);
+        // only send every 20th row (aka 1 Hz)
+        for (int i = 0; i < 19; i++) {
+            if (file_sd.available())
+                file_sd.readBytesUntil('\n', row, 140);
+        }
     }
+    Serial.printf("sent data from %s\n", file_sd.name());
     strcpy(filesToSend[file_stack_ptr--], "\0");    // clear filename from LIFO buffer
     file_sd.close();                                // Close the file.
     file_sd = SD.open(filesToSend[file_stack_ptr], FILE_READ);
-    Serial.print("sent data\n");
-    // Debugging
-    Serial.println("match found");
-    Serial.printf("file_sd.name(): %s", file_sd.name());
 }
 
 uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, float *vals, char *name) {
@@ -560,7 +555,16 @@ uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, float *vals
     return len;
 }
 
-uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, uint16_t *wind, float temperature) {
+uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, char *name, float *vals, char *name2, float *vals2) {
+    uint8_t len;
+    len = sprintf(json_obj, R"({"s":%lu,"ms":%lu,"%s":[%f,%f,%f],"%s":[%f,%f,%f]})", time_s, time_ms, name, vals[0], vals[1], vals[2],
+            name2, vals2[0], vals2[1], vals2[2]);
+    json_obj[len] = '\0';
+    return len;
+}
+
+
+uint8_t make_json(char *json_obj, uint32_t time_s, uint32_t time_ms, char *name, float *vals, uint16_t *wind, float temperature) {
     uint8_t len;
     len = sprintf(json_obj, R"({"s":%lu,"ms":%lu,"W":[%hu,%hu],"T":%4f})", time_s, time_ms, wind[0], wind[1],
                   temperature);
